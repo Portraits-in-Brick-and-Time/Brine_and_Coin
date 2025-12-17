@@ -1,4 +1,5 @@
-[![CodeFactor](https://www.codefactor.io/repository/github/portraits-in-brick-and-time/brine_and_coin/badge)](https://www.codefactor.io/repository/github/portraits-in-brick-and-time/brine_and_coin) 
+[![CodeFactor](https://www.codefactor.io/repository/github/portraits-in-brick-and-time/brine-and-coin/badge)](https://www.codefactor.io/repository/github/portraits-in-brick-and-time/brine-and-coin)
+
 # Brine and Coin
 Brine and Coin is an open source text adventure where you experience the history of Schwäbisch Hall.
 
