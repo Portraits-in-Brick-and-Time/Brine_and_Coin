@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>BrineAndCoin</RootNamespace>
+    <AssemblyName>Portraits in Brick and Time - Brine And Coin</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
