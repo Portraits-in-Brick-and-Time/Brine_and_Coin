@@ -1,3 +1,4 @@
+[![CodeFactor](https://www.codefactor.io/repository/github/portraits-in-brick-and-time/brine_and_coin/badge)](https://www.codefactor.io/repository/github/portraits-in-brick-and-time/brine_and_coin) 
 # Brine and Coin
 Brine and Coin is an open source text adventure where you experience the history of Schwäbisch Hall.
 
@@ -9,7 +10,7 @@ Brine and Coin is an open source text adventure where you experience the history
 
 ## 🎮 About
 
-*Echoes of the City – Brine and Coin* is an interactive text adventure that invites players to step into the streets of historic cities, uncover hidden stories, and experience the lives of the people who shaped them.  
+*Portraits in Brick and Time – Brine and Coin* is an interactive text adventure that invites players to step into the streets of historic cities, uncover hidden stories, and experience the lives of the people who shaped them.  
 Set in Schwäbisch Hall during the heyday of salt trade, the game combines **rich historical detail**, **branching narratives**, and **decision-driven gameplay** to create a compelling journey through time.
 
 Players explore city districts, interact with notable personalities, and make choices that affect how the city evolves and how its stories are remembered.
