@@ -40,6 +40,7 @@ public class Program
         var writer = Locator.Current.GetService<TypeWriter>()!;
         await writer.PlayAsync("Assets/Texts/intro.txt", "Assets/Voice/intro.mp3");
 
+        Console.Clear();
         HelloWorldGame();
         Console.Clear();
     }
@@ -89,7 +90,7 @@ public class Program
                         "",
                         AssetGenerator.Custom(overworldMaker.Make, CreatePlayer),
                         new GameEndConditions(IsGameComplete, IsGameOver),
-                        new GameConfiguration(new ConsoleAdapter(), FrameBuilderCollections.Console, new(80, 50)));
+                        new GameConfiguration(new ConsoleAdapter(), FrameBuilderCollections.Console, new(90, 30)));
         
         GameExecutor.Execute(gameCreator, new ConsoleExecutionController());
     }
