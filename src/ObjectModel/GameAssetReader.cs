@@ -7,16 +7,14 @@ using LibObjectFile.Elf;
 using MessagePack;
 using NetAF.Assets;
 using ObjectModel.Models;
-using ObjectModel.Sections;
 
-public class GameAssetReader : IDisposable
+public class GameAssetReader
 {
     private ElfStreamSection _objectsSection;
     private ElfFile _file;
-    private int _objectIndex;
     private Stream _strm;
     private readonly ElfSymbolTable _symTable;
-    private readonly AttributesSection _attributesSection;
+    private readonly CustomSections _customSections;
 
     public GameAssetReader(Stream strm)
     {
@@ -25,40 +23,22 @@ public class GameAssetReader : IDisposable
 
         _symTable = (ElfSymbolTable)_file.Sections.First(_ => _ is ElfSymbolTable);
         _objectsSection = (ElfStreamSection)_file.Sections.First(_ => _.Name.Value == ".objects");
-        _attributesSection = new(_file);
-        _attributesSection.Read();
-    }
 
-    public int Count => _symTable!.Entries.Count(s => s.Type == ElfSymbolType.Object);
-    public bool HasObject => _objectIndex < Count;
-    public bool IsClosed { get; set; }
-
-    public void Close()
-    {
-        _file = null;
-        IsClosed = true;
-        _strm = null;
-        _objectsSection = null;
-    }
-
-    public void Dispose()
-    {
-        Close();
+        _customSections = new(_file);
+        _customSections.Read();
     }
 
     public IExaminable ReadObject()
     {
-        if (IsClosed || _strm!.Position == _strm.Length)
+        if (_strm!.Position == _strm.Length)
         {
             return null;
         }
 
         var obj = MessagePackSerializer.Deserialize<GameObject>(_objectsSection!.Stream);
 
-        _objectIndex++;
-
         var instance = obj.Instanciate();
-        obj.InstanciateAttributesTo(instance, _attributesSection);
+        obj.InstanciateAttributesTo(instance, _customSections.AttributesSection);
         
         return instance;
     }

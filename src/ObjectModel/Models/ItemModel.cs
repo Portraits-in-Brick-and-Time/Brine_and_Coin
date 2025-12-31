@@ -20,4 +20,14 @@ public class ItemModel : GameObject
     {
         return new Item(Name, Description);
     }
+
+    public static ItemModel FromItem(Item item)
+    {
+        return new ItemModel(item.Identifier.Name, item.Description.GetDescription());
+    }
+
+    public Item ToItem()
+    {
+        return new Item(Name, Description);
+    }
 }

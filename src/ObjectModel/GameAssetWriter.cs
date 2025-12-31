@@ -15,15 +15,15 @@ public class GameAssetWriter : IDisposable
     private readonly ElfStringTable _strTable = new();
     private readonly ElfSymbolTable _symbolTable = new();
     private ElfSection _objectsSection;
-    private readonly AttributesSection _attributesSection;
+    private readonly CustomSections _customSections;
 
     public GameAssetWriter(Stream outputStream)
     {
         _outputStream = outputStream;
 
         _file.Add(_strTable);
-        
-        _attributesSection = new AttributesSection(_file);
+
+        _customSections = new(_file);
     }
 
     public bool IsClosed { get; set; }
@@ -50,21 +50,23 @@ public class GameAssetWriter : IDisposable
             var obj = def.GetObject();
 
             var type = obj.GetField("type").GetString();
-            GameObject model = null;
+                var description = obj.GetField("description").GetString();
+            
             if (type is "character")
             {
-                var description = obj.GetField("description").GetString();
                 var isNPC = obj.GetField("isNPC").GetString() == "true";
-                model = new CharacterModel(name, description, isNPC);
+                var model = new CharacterModel(name, description, isNPC);
+                ApplyAttributes(obj, model);
+                WriteObject(model);
             }
             else if (type is "item")
             {
-                var description = obj.GetField("description").GetString();
-                model = new ItemModel(name, description);
+                var model = new ItemModel(name, description);
+                ApplyAttributes(obj, model);
+                _customSections.ItemsSection.Items.Add(model.ToItem());
+                continue;
             }
 
-            ApplyAttributes(obj, model);
-            WriteObject(model);
         }
     }
 
@@ -89,7 +91,7 @@ public class GameAssetWriter : IDisposable
 
         foreach (var (attrName, attrValue) in obj.GetField("attributes").GetObject().AsEnumerable())
         {
-            var attrIndex = _attributesSection.IndexOf(attrName);
+            var attrIndex = _customSections.AttributesSection.IndexOf(attrName);
             model.Attributes.Add(new IndexedRef(attrIndex), int.Parse(attrValue.GetString()));
         }
     }
@@ -107,11 +109,11 @@ public class GameAssetWriter : IDisposable
                  obj.GetField("visible").GetString() == "true"
             );
 
-            _attributesSection.Attributes.Add(attribute);
+            _customSections.AttributesSection.Attributes.Add(attribute);
         }
     }
 
-    private void AddSymbol(string name, ulong index, ulong size)
+    private void AddSymbol(string name, ulong index, ulong size, ElfSection section = null)
     {
         foreach (var symbol in _symbolTable.Entries)
         {
@@ -129,7 +131,7 @@ public class GameAssetWriter : IDisposable
                 Value = index,
                 Type = ElfSymbolType.Object,
                 Size = size,
-                SectionLink = _objectsSection
+                SectionLink = section ?? _objectsSection
             });
     }
 
@@ -146,7 +148,7 @@ public class GameAssetWriter : IDisposable
             Flags = ElfSectionFlags.None
         };
 
-        _attributesSection.Write();
+        _customSections.Write(_symbolTable);
 
         _symbolTable.Link = _strTable;
 
