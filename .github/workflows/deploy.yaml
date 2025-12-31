@@ -33,5 +33,5 @@ jobs:
         run: |
           dotnet tool install -g vpk
           vpk download github --repoUrl https://github.com/${{ github.repository }} --token ${{ secrets.GITHUB_TOKEN }}
-          vpk pack -u ${{ env.UNIQUE_IDENTIFIER }} -v ${{ steps.get-version.outputs.version }} -p publish --mainExe Portraits_in_Brick_and_Time_-_Brine_And_Coin.exe
+          vpk pack -u "${{ env.UNIQUE_IDENTIFIER }}" -v ${{ steps.get-version.outputs.version }} -p publish --mainExe Portraits_in_Brick_and_Time_-_Brine_And_Coin.exe
           vpk upload github --repoUrl https://github.com/${{ github.repository }} --publish --releaseName "Brine and Coin ${{ steps.get-version.outputs.version }}" --tag v${{ steps.get-version.outputs.version }} --token ${{ secrets.GITHUB_TOKEN }}
