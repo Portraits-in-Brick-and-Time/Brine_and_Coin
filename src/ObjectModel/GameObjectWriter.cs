@@ -22,14 +22,8 @@ public class GameAssetWriter : IDisposable
         _outputStream = outputStream;
 
         _file.Add(_strTable);
-
-        var attributesStreamSection = new ElfStreamSection(ElfSectionSpecialType.Data, new MemoryStream())
-        {
-            Name = ".attributes",
-            Flags = ElfSectionFlags.None
-        };
-        _attributesSection = new AttributesSection(attributesStreamSection);
-        _file.Add(attributesStreamSection);
+        
+        _attributesSection = new AttributesSection(_file);
     }
 
     public bool IsClosed { get; set; }
@@ -133,8 +127,8 @@ public class GameAssetWriter : IDisposable
         _file.Add(_objectsSection);
 
         _file.Write(_outputStream);
-        _outputStream.Flush();
 
+        _outputStream.Flush();
         _outputStream.Close();
         _codeStream.Close();
 

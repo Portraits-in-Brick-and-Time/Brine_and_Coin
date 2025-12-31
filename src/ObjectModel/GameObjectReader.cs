@@ -1,7 +1,6 @@
 namespace ObjectModel;
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using LibObjectFile.Elf;
@@ -11,12 +10,12 @@ using ObjectModel.Sections;
 
 public class GameAssetReader : IDisposable
 {
-    private ElfStreamSection? _objectsSection;
-    private ElfFile? _file;
+    private ElfStreamSection _objectsSection;
+    private ElfFile _file;
     private int _objectIndex;
-    private Stream? _strm;
-    private readonly ElfSymbolTable? _symTable;
-    private readonly AttributesSection? _attributesSection;
+    private Stream _strm;
+    private readonly ElfSymbolTable _symTable;
+    private readonly AttributesSection _attributesSection;
 
     public GameAssetReader(Stream strm)
     {
@@ -25,7 +24,7 @@ public class GameAssetReader : IDisposable
 
         _symTable = (ElfSymbolTable)_file.Sections.First(_ => _ is ElfSymbolTable);
         _objectsSection = (ElfStreamSection)_file.Sections.First(_ => _.Name.Value == ".objects");
-        _attributesSection = new((ElfStreamSection)_file.Sections.First(_ => _.Name.Value == ".attributes"));
+        _attributesSection = new(_file);
         _attributesSection.Read();
     }
 

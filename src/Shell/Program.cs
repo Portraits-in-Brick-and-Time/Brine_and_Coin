@@ -41,8 +41,7 @@ public class Program
         while (reader.HasObject)
         {
             var obj = reader.ReadObject();
-            Console.WriteLine($"Read object: {obj!.Name}");
-            Console.WriteLine($"Read object type: {obj!.Instanciate().GetType().Name}");
+            Console.WriteLine($"{obj!.Name}: {obj!.Instanciate().GetType().Name}");
         }
 
         var engine = new MiniAudioEngine();
