@@ -4,8 +4,8 @@ permissions:
   contents: write
 on:
   push:
-    branches:
-      - main
+    tags:
+      - "**"
 
 jobs:
   deploy-to-github-releases:
