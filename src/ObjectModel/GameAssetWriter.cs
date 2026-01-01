@@ -27,49 +27,33 @@ public class GameAssetWriter : IDisposable
         _file.Version = 1;
 
         _customSections = new(_file);
+
+        _definitionWriters["attributes"] = WriteAttribute;
+        _definitionWriters["characters"] = WriteCharacter;
+        _definitionWriters["items"] = WriteItem;
     }
 
     public bool IsClosed { get; set; }
 
+    private readonly Dictionary<string, Action<string, HoconObject>> _definitionWriters = [];
+
     public void WriteObjects(string defintiionFile)
     {
         var config = HoconParser.Parse(File.ReadAllText(defintiionFile));
-        WriteAttributeDefinitions(config);
 
-        foreach (var (name, def) in config.AsEnumerable().Where(_ => _.Key is not "attributes"))
+        foreach (var (sectionName, def) in config.AsEnumerable())
         {
-            var obj = def.GetObject();
-
-            var type = obj.GetField("type").GetString();
-                var description = obj.GetField("description").GetString();
-            
-            if (type is "character")
+            if (_definitionWriters.TryGetValue(sectionName, out var writer))
             {
-                var isNPC = obj.GetField("isNPC").GetString() == "true";
-                var model = new CharacterModel(name, description, isNPC);
-                ApplyAttributes(obj, model);
-                _customSections.CharactersSection.Characters.Add(model.Instanciate() as Character);
-            }
-            else if (type is "item")
-            {
-                var model = new ItemModel(name, description);
-                ApplyAttributes(obj, model);
-                _customSections.ItemsSection.Items.Add((Item)model.Instanciate());
+                foreach (var (attrName, attrDef) in def.GetObject().AsEnumerable())
+                {
+                    var obj = attrDef.GetObject();
+                    writer(attrName, obj);
+                }
                 continue;
             }
 
-        }
-    }
-
-    private void WriteAttributeDefinitions(HoconRoot config)
-    {
-        foreach (var (name, def) in config.AsEnumerable())
-        {
-            if (name is "attributes")
-            {
-                WriteAttributes(def);
-                continue;
-            }
+            throw new NotImplementedException($"No definition writer found for definition section '{sectionName}'");
         }
     }
 
@@ -87,21 +71,35 @@ public class GameAssetWriter : IDisposable
         }
     }
 
-    private void WriteAttributes(HoconField def)
+    private void WriteCharacter(string name, HoconObject obj)
     {
-        foreach (var (attrName, attrDef) in def.GetObject().AsEnumerable())
-        {
-            var obj = attrDef.GetObject();
-            
-            var attribute = new NetAF.Assets.Attributes.Attribute(attrName,
-                 obj.GetField("description").GetString(),
-                int.Parse(obj.GetField("min").GetString()),
-                 int.Parse(obj.GetField("max").GetString()),
-                 obj.GetField("visible").GetString() == "true"
-            );
+        var description = obj.GetField("description").GetString();
+        var isNPC = obj.GetField("isNPC").GetString() == "true";
 
-            _customSections.AttributesSection.Attributes.Add(attribute);
-        }
+        var model = new CharacterModel(name, description, isNPC);
+        ApplyAttributes(obj, model);
+        _customSections.CharactersSection.Characters.Add(model.Instanciate() as Character);
+    }
+
+    private void WriteItem(string name, HoconObject obj)
+    {
+        var description = obj.GetField("description").GetString();
+
+        var model = new ItemModel(name, description);
+        ApplyAttributes(obj, model);
+        _customSections.ItemsSection.Items.Add((Item)model.Instanciate());
+    }
+
+    private void WriteAttribute(string name, HoconObject obj)
+    {
+        var attribute = new NetAF.Assets.Attributes.Attribute(name,
+             obj.GetField("description").GetString(),
+            int.Parse(obj.GetField("min").GetString()),
+             int.Parse(obj.GetField("max").GetString()),
+             obj.GetField("visible").GetString() == "true"
+        );
+
+        _customSections.AttributesSection.Attributes.Add(attribute);
     }
 
     public void Close()
