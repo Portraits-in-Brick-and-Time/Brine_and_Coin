@@ -6,6 +6,7 @@ using LibObjectFile.Elf;
 using MessagePack;
 using NetAF.Assets;
 using NetAF.Assets.Characters;
+using NetAF.Assets.Locations;
 using ObjectModel.Models;
 using ObjectModel.Sections;
 
@@ -31,6 +32,7 @@ public class GameAssetWriter : IDisposable
         _definitionWriters["attributes"] = WriteAttribute;
         _definitionWriters["characters"] = WriteCharacter;
         _definitionWriters["items"] = WriteItem;
+        _definitionWriters["rooms"] = WriteRoom;
     }
 
     public bool IsClosed { get; set; }
@@ -88,6 +90,15 @@ public class GameAssetWriter : IDisposable
         var model = new ItemModel(name, description);
         ApplyAttributes(obj, model);
         _customSections.ItemsSection.Items.Add((Item)model.Instanciate());
+    }
+
+    private void WriteRoom(string name, HoconObject obj)
+    {
+        var description = obj.GetField("description").GetString();
+
+        var model = new RoomModel(name, description);
+        ApplyAttributes(obj, model);
+        _customSections.RoomsSection.Rooms.Add((Room)model.Instanciate());
     }
 
     private void WriteAttribute(string name, HoconObject obj)
