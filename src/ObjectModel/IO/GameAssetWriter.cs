@@ -1,14 +1,12 @@
-namespace ObjectModel;
+namespace ObjectModel.IO;
 
 using System.IO;
 using Hocon;
 using LibObjectFile.Elf;
-using MessagePack;
 using NetAF.Assets;
 using NetAF.Assets.Characters;
 using NetAF.Assets.Locations;
 using ObjectModel.Models;
-using ObjectModel.Sections;
 
 public class GameAssetWriter : IDisposable
 {

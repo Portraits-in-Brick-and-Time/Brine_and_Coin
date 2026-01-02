@@ -3,4 +3,4 @@ using MessagePack;
 namespace ObjectModel;
 
 [MessagePackObject]
-public record IndexedRef([property: Key(0)] int Index);
+public record NamedRef([property: Key(0)] string Name);

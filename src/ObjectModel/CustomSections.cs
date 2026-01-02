@@ -23,10 +23,13 @@ public class CustomSections
 
         _allSections =
         [
+            // No Dependencies To Other Sections
             AttributesSection,
             ItemsSection,
+
+            // Depends On Other Sections
+            RoomsSection,
             CharactersSection,
-            RoomsSection
         ];
     }
 

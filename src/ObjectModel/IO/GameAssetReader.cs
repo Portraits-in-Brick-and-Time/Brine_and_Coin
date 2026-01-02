@@ -1,12 +1,8 @@
-namespace ObjectModel;
+namespace ObjectModel.IO;
 
-using System;
 using System.IO;
 using System.Linq;
 using LibObjectFile.Elf;
-using MessagePack;
-using NetAF.Assets;
-using ObjectModel.Models;
 
 public class GameAssetReader
 {
