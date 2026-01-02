@@ -1,5 +1,6 @@
 using System.Reflection;
 using LibObjectFile.Elf;
+using NetAF.Assets;
 using NetAF.Assets.Characters;
 using NetAF.Assets.Locations;
 using NetAF.Logic;
@@ -21,15 +22,6 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
-        if (args.Length == 1 && args[0] == "--version")
-        {
-            var gitVersionInformationType = Assembly.GetEntryAssembly()!.GetType("GitVersionInformation");
-            var field = gitVersionInformationType!.GetField("MajorMinorPatch");
-
-            Console.WriteLine(field!.GetValue(null));
-            return;
-        }
-
         VelopackApp
                    .Build()
 #if WINDOWS
@@ -41,12 +33,7 @@ public class Program
         await CheckForUpdatesAsync();
 #endif
 
-        var elf = File.OpenWrite("Assets/assets.elf");
-        var objectWriter = new GameAssetWriter(elf);
-        objectWriter.WriteObjects("Assets/Definitions/assets.conf");
-        objectWriter.Close();
-
-        var reader = new GameAssetReader(File.OpenRead("Assets/assets.elf"));
+        var reader = new GameAssetReader(File.OpenRead("Assets/core_assets.elf"));
         reader.File.Print(Console.Out);
 
         var engine = new MiniAudioEngine();
@@ -93,7 +80,7 @@ public class Program
         var regionMaker = new RegionMaker("Mountain", "An imposing volcano just East of town.")
         {
             // add a room to the region at position x 0, y 0, z 0
-            [0, 0, 0] = new Room("Cavern", "A dark cavern set in to the base of the mountain.")
+            [0, 0, 0] = new Room("Cavern", "A dark cavern set in to the base of the mountain."),
         };
 
         // create overworld maker. the overworld maker simplifies creating in game overworlds. an overworld contains a series or regions
@@ -112,9 +99,13 @@ public class Program
     {
         var mgr = new UpdateManager(new GithubSource("https://github.com/Portraits-in-Brick-and-Time/Brine-and-Coin", null, false));
 
+        Console.WriteLine("Checking for updates...");
         var newVersion = await mgr.CheckForUpdatesAsync();
         if (newVersion == null)
+        {
+            Console.Clear();
             return;
+        }
 
         await mgr.DownloadUpdatesAsync(newVersion);
 
