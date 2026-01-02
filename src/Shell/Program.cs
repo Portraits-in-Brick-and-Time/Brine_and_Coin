@@ -1,5 +1,6 @@
 using System.Reflection;
 using LibObjectFile.Elf;
+using NetAF.Assets;
 using NetAF.Assets.Characters;
 using NetAF.Assets.Locations;
 using NetAF.Logic;
@@ -79,7 +80,7 @@ public class Program
         var regionMaker = new RegionMaker("Mountain", "An imposing volcano just East of town.")
         {
             // add a room to the region at position x 0, y 0, z 0
-            [0, 0, 0] = new Room("Cavern", "A dark cavern set in to the base of the mountain.")
+            [0, 0, 0] = new Room("Cavern", "A dark cavern set in to the base of the mountain."),
         };
 
         // create overworld maker. the overworld maker simplifies creating in game overworlds. an overworld contains a series or regions
