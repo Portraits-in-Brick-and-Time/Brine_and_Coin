@@ -10,6 +10,8 @@ public class CustomSections
 
     public CharactersSection CharactersSection { get; }
 
+    public RoomsSection RoomsSection { get; }
+
     private CustomSection[] _allSections;
 
     public CustomSections(ElfFile file)
@@ -17,12 +19,17 @@ public class CustomSections
         AttributesSection = new(file);
         ItemsSection = new(file);
         CharactersSection = new(file);
+        RoomsSection = new(file);
 
         _allSections =
         [
+            // No Dependencies To Other Sections
             AttributesSection,
             ItemsSection,
-            CharactersSection
+
+            // Depends On Other Sections
+            RoomsSection,
+            CharactersSection,
         ];
     }
 
