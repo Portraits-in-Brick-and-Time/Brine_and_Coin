@@ -1,11 +1,10 @@
 using MessagePack;
-using NetAF.Assets;
-using NetAF.Assets.Characters;
 
 namespace ObjectModel.Models;
 
-[MessagePackObject]
-public class CharacterModel : GameObject {
+[MessagePackObject(AllowPrivate = true)]
+internal class CharacterModel : GameObjectModel
+{
     public CharacterModel(string name, string description, bool isNPC)
     {
         Name = name;
@@ -18,24 +17,4 @@ public class CharacterModel : GameObject {
 
     [Key(3)]
     public bool IsNPC { get; set; }
-
-    public override IExaminable Instanciate(CustomSections customSections)
-    {
-        Character c;
-        if (IsNPC)
-        {
-            c = new NonPlayableCharacter(Name, Description);
-        }
-        else
-        {
-            c = new PlayableCharacter(Name, Description);
-        }
-    
-        return c;
-    }
-
-    public static CharacterModel FromCharacter(Character character)
-    {
-        return new CharacterModel(character.Identifier.Name, character.Description.GetDescription(), character is NonPlayableCharacter);
-    }
 }

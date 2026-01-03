@@ -4,7 +4,7 @@ using LibObjectFile.Elf;
 
 namespace ObjectModel;
 
-public abstract class CustomSection(ElfFile file)
+internal abstract class CustomSection(ElfFile file)
 {
     protected ElfStreamSection Section;
     protected ElfFile File = file;

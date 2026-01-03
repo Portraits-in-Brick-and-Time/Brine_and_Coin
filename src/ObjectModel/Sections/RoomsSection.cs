@@ -1,17 +1,15 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using LibObjectFile.Elf;
 using MessagePack;
-using NetAF.Assets.Locations;
 using ObjectModel.Models;
 
 namespace ObjectModel.Sections;
 
-public class RoomsSection(ElfFile file) : CustomSection(file)
+internal class RoomsSection(ElfFile file) : CustomSection(file)
 {
-    public List<Room> Rooms { get; } = [];
+    public List<RoomModel> Rooms { get; } = [];
 
     public override string Name => ".rooms";
     protected override void Write(BinaryWriter writer)
@@ -20,9 +18,9 @@ public class RoomsSection(ElfFile file) : CustomSection(file)
         foreach (var room in Rooms)
         {
             var start = (ulong)writer.BaseStream.Position;
-            var model = RoomModel.FromRoom(room);
-            writer.Write(MessagePackSerializer.Serialize(model));
-            AddSymbol(room.Identifier.Name, start, (ulong)writer.BaseStream.Position - start);
+            writer.Write(MessagePackSerializer.Serialize(room));
+
+            AddSymbol(room.Name, start, (ulong)writer.BaseStream.Position - start);
         }
     }
 
@@ -32,14 +30,12 @@ public class RoomsSection(ElfFile file) : CustomSection(file)
         for (var i = 0; i < count; i++)
         {
             var model = MessagePackSerializer.Deserialize<RoomModel>(reader.BaseStream);
-            var instance = (Room)model.Instanciate(CustomSections);
-            model.InstanciateAttributesTo(instance, CustomSections.AttributesSection);
-            Rooms.Add(instance);
+            Rooms.Add(model);
         }
     }
 
-    public Room GetByName(string name)
+    public RoomModel GetByName(string name)
     {
-        return Rooms.FirstOrDefault(r => r.Identifier.Name == name);
+        return Rooms.FirstOrDefault(r => r.Name == name);
     }
 }

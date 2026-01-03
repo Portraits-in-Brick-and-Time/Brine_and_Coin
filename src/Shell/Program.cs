@@ -42,9 +42,6 @@ public class Program
         await CheckForUpdatesAsync();
 #endif
 
-        var reader = new GameAssetReader(File.OpenRead("Assets/core_assets.elf"));
-        reader.File.Print(Console.Out);
-
         var engine = new MiniAudioEngine();
         var playbackDevice = engine.InitializePlaybackDevice(null, AudioFormat.DvdHq);
         playbackDevice.Start();
@@ -56,7 +53,7 @@ public class Program
 
         //await writer.PlayAsync("Assets/Texts/intro.txt", "Assets/Voice/intro.mp3");
 
-        InitAndExecuteGame(reader);
+        InitAndExecuteGame();
         Console.Clear();
     }
 
@@ -81,34 +78,21 @@ public class Program
         return new EndCheckResult(true, "Game Over", "You died!");
     }
 
-    static void InitAndExecuteGame(GameAssetReader reader)
+    static void InitAndExecuteGame()
     {
+        var world = GameAssetLoader.LoadFile();
+
         var gameCreator = Game.Create(
                         new GameInfo("Portraits in Brick and Time - Brine and Coin", "Brine and Coin is an open source text adventure where you experience the history of Schwäbisch Hall.", "Chris Anders"),
                         "",
-                        AssetGenerator.Retained(CreateWorld(reader), CreatePlayer()),
+                        AssetGenerator.Retained(world, CreatePlayer()),
                         new GameEndConditions(IsGameComplete, IsGameOver),
                         new GameConfiguration(new ConsoleAdapter(), FrameBuilderCollections.Console, new(90, 30), StartModes.Scene));
 
         GameExecutor.Execute(gameCreator, new ConsoleExecutionController());
     }
 
-    private static Overworld CreateWorld(GameAssetReader reader)
-    {
-        var worldName = reader.CustomSections.MetaSection.Properties["world.name"];
-        var worldDescription = reader.CustomSections.MetaSection.Properties["world.description"];
-
-        var overworld = new Overworld(worldName.ToString(), worldDescription.ToString());
-
-        foreach (var region in reader.CustomSections.RegionsSection.Regions)
-        {
-            overworld.AddRegion(region);
-        }
-
-        return overworld;
-    }
-
-    private static async Task CheckForUpdatesAsync()
+    static async Task CheckForUpdatesAsync()
     {
         var mgr = new UpdateManager(new GithubSource("https://github.com/Portraits-in-Brick-and-Time/Brine-and-Coin", null, false));
 

@@ -5,7 +5,7 @@ using MessagePack;
 
 namespace ObjectModel.Sections;
 
-public class MetaSection(ElfFile file) : CustomSection(file)
+internal class MetaSection(ElfFile file) : CustomSection(file)
 {
     public override string Name => ".meta";
 

@@ -6,9 +6,6 @@ using System.IO;
 using System.Linq;
 using Hocon;
 using LibObjectFile.Elf;
-using NetAF.Assets;
-using NetAF.Assets.Characters;
-using NetAF.Assets.Locations;
 using ObjectModel.Models;
 
 public class GameAssetWriter : IDisposable
@@ -52,7 +49,7 @@ public class GameAssetWriter : IDisposable
                 WriteMeta(def.GetObject());
                 continue;
             }
-            
+
             if (_definitionWriters.TryGetValue(sectionName, out var writer))
             {
                 foreach (var (attrName, attrDef) in def.GetObject().AsEnumerable())
@@ -84,7 +81,7 @@ public class GameAssetWriter : IDisposable
         }
     }
 
-    private void ApplyAttributes(HoconObject obj, GameObject model)
+    private void ApplyAttributes(HoconObject obj, GameObjectModel model)
     {
         if (!obj.ContainsKey("attributes"))
         {
@@ -104,7 +101,7 @@ public class GameAssetWriter : IDisposable
 
         var model = new CharacterModel(name, description, isNPC);
         ApplyAttributes(obj, model);
-        _customSections.CharactersSection.Characters.Add(model.Instanciate(_customSections) as Character);
+        _customSections.CharactersSection.Characters.Add(model);
     }
 
     private void WriteItem(string name, HoconObject obj)
@@ -113,7 +110,7 @@ public class GameAssetWriter : IDisposable
 
         var model = new ItemModel(name, description);
         ApplyAttributes(obj, model);
-        _customSections.ItemsSection.Items.Add((Item)model.Instanciate(_customSections));
+        _customSections.ItemsSection.Items.Add(model);
     }
 
     private void WriteRoom(string name, HoconObject obj)
@@ -122,40 +119,48 @@ public class GameAssetWriter : IDisposable
 
         var model = new RoomModel(name, description);
         ApplyAttributes(obj, model);
-        _customSections.RoomsSection.Rooms.Add((Room)model.Instanciate(_customSections));
+        _customSections.RoomsSection.Rooms.Add(model);
     }
 
     private void WriteRegion(string name, HoconObject obj)
     {
         var description = obj.GetField("description").GetString();
-        var rooms = obj.GetField("rooms").GetArray().Select(r => r.GetObject()).ToArray();
+        var rooms = obj.GetField("rooms").GetObject();
 
         var roomDict = new Dictionary<NamedRef, Position>();
-        foreach (var room in rooms)
+        foreach (var (roomName, roomObj) in rooms)
         {
-            var nameRef = new NamedRef(room.GetField("name").GetString());
-            var x = int.Parse(room.GetField("x").GetString());
-            var y = int.Parse(room.GetField("y").GetString());
-            var z = int.Parse(room.GetField("z").GetString());
-            
+            var _obj = roomObj.GetObject();
+            var nameRef = new NamedRef(roomName);
+            var x = int.Parse(_obj.GetField("x").GetString());
+            var y = int.Parse(_obj.GetField("y").GetString());
+            var z = int.Parse(_obj.GetField("z").GetString());
+
             roomDict[nameRef] = new(x, y, z);
         }
 
         var model = new RegionModel(name, description, roomDict);
+
+        if (obj.ContainsKey("startRoom"))
+        {
+            model.StartRoom = new(obj["startRoom"].GetString());
+        }
+
         ApplyAttributes(obj, model);
-        _customSections.RegionsSection.Regions.Add((Region)model.Instanciate(_customSections));
+        _customSections.RegionsSection.Regions.Add(model);
     }
 
     private void WriteAttribute(string name, HoconObject obj)
     {
-        var attribute = new NetAF.Assets.Attributes.Attribute(name,
+        var model = new AttributeModel(
+             name,
              obj.GetField("description").GetString(),
-            int.Parse(obj.GetField("min").GetString()),
+             int.Parse(obj.GetField("min").GetString()),
              int.Parse(obj.GetField("max").GetString()),
              obj.GetField("visible").GetString() == "true"
         );
 
-        _customSections.AttributesSection.Attributes.Add(attribute);
+        _customSections.AttributesSection.Attributes.Add(model);
     }
 
     public void Close()
