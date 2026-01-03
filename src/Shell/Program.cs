@@ -34,9 +34,6 @@ public class Program
 
         VelopackApp
                    .Build()
-#if WINDOWS
-                       .OnAfterInstallFastCallback(v => new Shortcuts().CreateShortcutForThisExe(ShortcutLocation.Desktop))
-#endif
                    .Run();
 
 #if RELEASE
