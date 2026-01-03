@@ -14,6 +14,8 @@ public class CustomSections
 
     public RegionsSection RegionsSection { get; }
 
+    public MetaSection MetaSection { get; }
+
     private CustomSection[] _allSections;
 
     public CustomSections(ElfFile file)
@@ -24,8 +26,12 @@ public class CustomSections
         RoomsSection = new(file);
         RegionsSection = new(file);
 
+        MetaSection = new(file);
+
         _allSections =
         [
+            MetaSection,
+
             // No Dependencies To Other Sections
             AttributesSection,
             ItemsSection,

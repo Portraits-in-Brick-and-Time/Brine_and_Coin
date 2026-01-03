@@ -47,6 +47,12 @@ public class GameAssetWriter : IDisposable
 
         foreach (var (sectionName, def) in config.AsEnumerable())
         {
+            if (sectionName == "meta")
+            {
+                WriteMeta(def.GetObject());
+                continue;
+            }
+            
             if (_definitionWriters.TryGetValue(sectionName, out var writer))
             {
                 foreach (var (attrName, attrDef) in def.GetObject().AsEnumerable())
@@ -58,6 +64,23 @@ public class GameAssetWriter : IDisposable
             }
 
             throw new NotImplementedException($"No definition writer found for definition section '{sectionName}'");
+        }
+    }
+
+    private void WriteMeta(HoconObject hoconObject, string prefix = "")
+    {
+        foreach (var (key, value) in hoconObject.AsEnumerable())
+        {
+            string fullKey = string.IsNullOrEmpty(prefix) ? key : $"{prefix}.{key}";
+
+            if (value.Type == HoconType.Object)
+            {
+                WriteMeta(value.GetObject(), fullKey);
+            }
+            else
+            {
+                _customSections.MetaSection.Properties[fullKey] = value.GetString();
+            }
         }
     }
 

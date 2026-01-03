@@ -54,10 +54,9 @@ public class Program
         Locator.CurrentMutable.RegisterConstant(playbackDevice);
         Locator.CurrentMutable.RegisterConstant(writer);
 
-        await writer.PlayAsync("Assets/Texts/intro.txt", "Assets/Voice/intro.mp3");
+        //await writer.PlayAsync("Assets/Texts/intro.txt", "Assets/Voice/intro.mp3");
 
-        Console.Clear();
-        HelloWorldGame();
+        InitAndExecuteGame(reader);
         Console.Clear();
     }
 
@@ -82,26 +81,31 @@ public class Program
         return new EndCheckResult(true, "Game Over", "You died!");
     }
 
-    static void HelloWorldGame()
+    static void InitAndExecuteGame(GameAssetReader reader)
     {
-        Console.Clear();
-        // create region maker. the region maker simplifies creating in game regions. a region contains a series of rooms
-        var regionMaker = new RegionMaker("Mountain", "An imposing volcano just East of town.")
-        {
-            // add a room to the region at position x 0, y 0, z 0
-            [0, 0, 0] = new Room("Cavern", "A dark cavern set in to the base of the mountain."),
-        };
-
-        // create overworld maker. the overworld maker simplifies creating in game overworlds. an overworld contains a series or regions
-        var overworldMaker = new OverworldMaker("Daves World", "An ancient kingdom.", regionMaker);
         var gameCreator = Game.Create(
                         new GameInfo("Portraits in Brick and Time - Brine and Coin", "Brine and Coin is an open source text adventure where you experience the history of Schwäbisch Hall.", "Chris Anders"),
                         "",
-                        AssetGenerator.Custom(overworldMaker.Make, CreatePlayer),
+                        AssetGenerator.Retained(CreateWorld(reader), CreatePlayer()),
                         new GameEndConditions(IsGameComplete, IsGameOver),
                         new GameConfiguration(new ConsoleAdapter(), FrameBuilderCollections.Console, new(90, 30), StartModes.Scene));
 
         GameExecutor.Execute(gameCreator, new ConsoleExecutionController());
+    }
+
+    private static Overworld CreateWorld(GameAssetReader reader)
+    {
+        var worldName = reader.CustomSections.MetaSection.Properties["world.name"];
+        var worldDescription = reader.CustomSections.MetaSection.Properties["world.description"];
+
+        var overworld = new Overworld(worldName.ToString(), worldDescription.ToString());
+
+        foreach (var region in reader.CustomSections.RegionsSection.Regions)
+        {
+            overworld.AddRegion(region);
+        }
+
+        return overworld;
     }
 
     private static async Task CheckForUpdatesAsync()
