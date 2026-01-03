@@ -3,7 +3,7 @@ using ObjectModel.Sections;
 
 namespace ObjectModel;
 
-public class CustomSections
+internal class CustomSections
 {
     public AttributesSection AttributesSection { get; }
     public ItemsSection ItemsSection { get; }
@@ -11,6 +11,10 @@ public class CustomSections
     public CharactersSection CharactersSection { get; }
 
     public RoomsSection RoomsSection { get; }
+
+    public RegionsSection RegionsSection { get; }
+
+    public MetaSection MetaSection { get; }
 
     private CustomSection[] _allSections;
 
@@ -20,16 +24,18 @@ public class CustomSections
         ItemsSection = new(file);
         CharactersSection = new(file);
         RoomsSection = new(file);
+        RegionsSection = new(file);
+
+        MetaSection = new(file);
 
         _allSections =
         [
-            // No Dependencies To Other Sections
+            MetaSection,
             AttributesSection,
             ItemsSection,
-
-            // Depends On Other Sections
             RoomsSection,
             CharactersSection,
+            RegionsSection
         ];
     }
 

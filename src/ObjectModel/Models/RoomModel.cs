@@ -1,30 +1,17 @@
 using System.Collections.Generic;
 using MessagePack;
-using NetAF.Assets;
-using NetAF.Assets.Locations;
 
-namespace ObjectModel.Models
+namespace ObjectModel.Models;
+
+[MessagePackObject(AllowPrivate = true)]
+internal class RoomModel : GameObjectModel
 {
-    [MessagePackObject]
-    public class RoomModel : GameObject
+    [Key(3)]
+    public List<NamedRef> Items { get; set; }
+
+    public RoomModel(string name, string description)
     {
-        [Key(3)]
-        public List<NamedRef> Items { get; set; }
-
-        public RoomModel(string name, string description)
-        {
-            Name = name;
-            Description = description;
-        }
-
-        public static RoomModel FromRoom(Room room)
-        {
-            return new RoomModel(room.Identifier.Name, room.Description.GetDescription());
-        }
-
-        public override IExaminable Instanciate()
-        {
-            return new Room(Name, Description);
-        }
+        Name = name;
+        Description = description;
     }
 }

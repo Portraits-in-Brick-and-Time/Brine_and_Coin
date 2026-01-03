@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using LibObjectFile.Elf;
 
-public class GameAssetReader
+internal class GameAssetReader
 {
     private ElfFile _file;
 

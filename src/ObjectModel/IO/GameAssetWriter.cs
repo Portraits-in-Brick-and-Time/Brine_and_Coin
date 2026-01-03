@@ -6,9 +6,6 @@ using System.IO;
 using System.Linq;
 using Hocon;
 using LibObjectFile.Elf;
-using NetAF.Assets;
-using NetAF.Assets.Characters;
-using NetAF.Assets.Locations;
 using ObjectModel.Models;
 
 public class GameAssetWriter : IDisposable
@@ -34,6 +31,7 @@ public class GameAssetWriter : IDisposable
         _definitionWriters["characters"] = WriteCharacter;
         _definitionWriters["items"] = WriteItem;
         _definitionWriters["rooms"] = WriteRoom;
+        _definitionWriters["regions"] = WriteRegion;
     }
 
     public bool IsClosed { get; set; }
@@ -46,6 +44,12 @@ public class GameAssetWriter : IDisposable
 
         foreach (var (sectionName, def) in config.AsEnumerable())
         {
+            if (sectionName == "meta")
+            {
+                WriteMeta(def.GetObject());
+                continue;
+            }
+
             if (_definitionWriters.TryGetValue(sectionName, out var writer))
             {
                 foreach (var (attrName, attrDef) in def.GetObject().AsEnumerable())
@@ -60,7 +64,24 @@ public class GameAssetWriter : IDisposable
         }
     }
 
-    private void ApplyAttributes(HoconObject obj, GameObject model)
+    private void WriteMeta(HoconObject hoconObject, string prefix = "")
+    {
+        foreach (var (key, value) in hoconObject.AsEnumerable())
+        {
+            string fullKey = string.IsNullOrEmpty(prefix) ? key : $"{prefix}.{key}";
+
+            if (value.Type == HoconType.Object)
+            {
+                WriteMeta(value.GetObject(), fullKey);
+            }
+            else
+            {
+                _customSections.MetaSection.Properties[fullKey] = value.GetString();
+            }
+        }
+    }
+
+    private void ApplyAttributes(HoconObject obj, GameObjectModel model)
     {
         if (!obj.ContainsKey("attributes"))
         {
@@ -80,7 +101,7 @@ public class GameAssetWriter : IDisposable
 
         var model = new CharacterModel(name, description, isNPC);
         ApplyAttributes(obj, model);
-        _customSections.CharactersSection.Characters.Add(model.Instanciate() as Character);
+        _customSections.CharactersSection.Characters.Add(model);
     }
 
     private void WriteItem(string name, HoconObject obj)
@@ -89,7 +110,7 @@ public class GameAssetWriter : IDisposable
 
         var model = new ItemModel(name, description);
         ApplyAttributes(obj, model);
-        _customSections.ItemsSection.Items.Add((Item)model.Instanciate());
+        _customSections.ItemsSection.Items.Add(model);
     }
 
     private void WriteRoom(string name, HoconObject obj)
@@ -98,19 +119,48 @@ public class GameAssetWriter : IDisposable
 
         var model = new RoomModel(name, description);
         ApplyAttributes(obj, model);
-        _customSections.RoomsSection.Rooms.Add((Room)model.Instanciate());
+        _customSections.RoomsSection.Rooms.Add(model);
+    }
+
+    private void WriteRegion(string name, HoconObject obj)
+    {
+        var description = obj.GetField("description").GetString();
+        var rooms = obj.GetField("rooms").GetObject();
+
+        var roomDict = new Dictionary<NamedRef, Position>();
+        foreach (var (roomName, roomObj) in rooms)
+        {
+            var _obj = roomObj.GetObject();
+            var nameRef = new NamedRef(roomName);
+            var x = int.Parse(_obj.GetField("x").GetString());
+            var y = int.Parse(_obj.GetField("y").GetString());
+            var z = int.Parse(_obj.GetField("z").GetString());
+
+            roomDict[nameRef] = new(x, y, z);
+        }
+
+        var model = new RegionModel(name, description, roomDict);
+
+        if (obj.ContainsKey("startRoom"))
+        {
+            model.StartRoom = new(obj["startRoom"].GetString());
+        }
+
+        ApplyAttributes(obj, model);
+        _customSections.RegionsSection.Regions.Add(model);
     }
 
     private void WriteAttribute(string name, HoconObject obj)
     {
-        var attribute = new NetAF.Assets.Attributes.Attribute(name,
+        var model = new AttributeModel(
+             name,
              obj.GetField("description").GetString(),
-            int.Parse(obj.GetField("min").GetString()),
+             int.Parse(obj.GetField("min").GetString()),
              int.Parse(obj.GetField("max").GetString()),
              obj.GetField("visible").GetString() == "true"
         );
 
-        _customSections.AttributesSection.Attributes.Add(attribute);
+        _customSections.AttributesSection.Attributes.Add(model);
     }
 
     public void Close()
