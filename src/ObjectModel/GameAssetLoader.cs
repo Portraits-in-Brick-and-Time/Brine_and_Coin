@@ -24,7 +24,7 @@ public class GameAssetLoader
         this.customSections = customSections;
     }
 
-    public static Overworld LoadFile()
+    public static Overworld LoadFile(out PlayableCharacter[] players)
     {
         const string path = "Assets/core_assets.elf";
         if (!File.Exists(path))
@@ -36,6 +36,7 @@ public class GameAssetLoader
         var loader = new GameAssetLoader(reader.CustomSections);
 
         loader.Load();
+        players = [.. loader._players];
 
         return loader.BuildWorld();
     }
