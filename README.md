@@ -32,5 +32,7 @@ Players explore city districts, interact with notable personalities, and make ch
 
 ---
 
-## 🏗️ Project Structure
+## 🏗️ Build and Run
 
+To run the project navigate with a terminal to the src directory and type `dotnet run`.
+The project is configured to build the assets first. Sometimes when opened in an ide the compilation is blocked because the ide is currently using the dll. When the problem happens type `dotnet build` in the terminal.
