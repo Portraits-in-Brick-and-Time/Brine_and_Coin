@@ -27,7 +27,10 @@ public abstract class MenuPage
         }
 
         Render();
-        Console.ReadLine();
+        if (this is not StartGamePage)
+        {
+            Console.ReadLine();
+        }
         Back();
     }
 }
