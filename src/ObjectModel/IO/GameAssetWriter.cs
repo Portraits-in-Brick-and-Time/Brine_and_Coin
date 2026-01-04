@@ -95,6 +95,19 @@ public class GameAssetWriter : IDisposable
         }
     }
 
+    private void ApplyInventory(HoconObject obj, IItemModel model)
+    {
+        if (!obj.ContainsKey("inventory"))
+        {
+            return;
+        }
+
+        foreach (var item in obj.GetField("inventory").GetArray())
+        {
+            model.Items.Add(new(item.GetString()));
+        }
+    }
+
     private void WriteCharacter(string name, HoconObject obj)
     {
         var description = obj.GetField("description").GetString();
@@ -102,6 +115,7 @@ public class GameAssetWriter : IDisposable
 
         var model = new CharacterModel(name, description, isNPC);
         ApplyAttributes(obj, model);
+        ApplyInventory(obj, model);
         _customSections.CharactersSection.Characters.Add(model);
     }
 
@@ -120,6 +134,7 @@ public class GameAssetWriter : IDisposable
 
         var model = new RoomModel(name, description);
         ApplyAttributes(obj, model);
+        ApplyInventory(obj, model);
         _customSections.RoomsSection.Rooms.Add(model);
     }
 

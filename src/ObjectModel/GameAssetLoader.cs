@@ -124,6 +124,8 @@ public class GameAssetLoader
         {
             var room = new Room(roomModel.Name, roomModel.Description);
             ApplyAttributes(room, roomModel);
+            AddItems(room, roomModel);
+
             _rooms.Add(room);
         }
     }
@@ -145,6 +147,7 @@ public class GameAssetLoader
             }
 
             ApplyAttributes(character, charModel);
+            AddItems(character, charModel);
         }
     }
 
@@ -156,17 +159,39 @@ public class GameAssetLoader
         }
     }
 
-    private Attribute GetAttributeByRef(NamedRef name)
+    private void AddItems(IItemContainer target, IItemModel model)
+    {
+        foreach (var itemRef in model.Items)
+        {
+            var item = GetItemByRef(itemRef);
+            target.AddItem(item);
+        }
+    }
+
+    Attribute GetAttributeByRef(NamedRef @ref)
     {
         foreach (var attribute in _attributes)
         {
-            if (attribute.Name == name.Name)
+            if (attribute.Name == @ref.Name)
             {
                 return attribute;
             }
         }
 
-        throw new KeyNotFoundException($"Attribute '{name}' not found.");
+        throw new KeyNotFoundException($"Attribute '{@ref}' not found.");
+    }
+
+    Item GetItemByRef(NamedRef @ref)
+    {
+        foreach (var item in _items)
+        {
+            if (item.Identifier.Name == @ref.Name)
+            {
+                return item;
+            }
+        }
+
+        throw new KeyNotFoundException($"Item '{@ref}' not found.");
     }
 
 }
