@@ -2,6 +2,7 @@ namespace ObjectModel.IO;
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Hocon;
@@ -155,12 +156,18 @@ public class GameAssetWriter : IDisposable
         var model = new AttributeModel(
              name,
              obj.GetField("description").GetString(),
-             int.Parse(obj.GetField("min").GetString()),
-             int.Parse(obj.GetField("max").GetString()),
+             GetOptionalFieldValue<int>(obj, "min"),
+             GetOptionalFieldValue<int>(obj, "max"),
              obj.GetField("visible").GetString() == "true"
         );
 
         _customSections.AttributesSection.Attributes.Add(model);
+    }
+
+    private T? GetOptionalFieldValue<T>(HoconObject obj, string fieldName)
+        where T : IParsable<T>
+    {
+        return obj.ContainsKey(fieldName) ? T.Parse(obj.GetField(fieldName).GetString(), CultureInfo.InvariantCulture) : default;
     }
 
     public void Close()
