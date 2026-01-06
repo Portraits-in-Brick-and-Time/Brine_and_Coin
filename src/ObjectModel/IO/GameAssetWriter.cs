@@ -116,7 +116,7 @@ public class GameAssetWriter : IDisposable
         var model = new CharacterModel(name, description, isNPC);
         ApplyAttributes(obj, model);
         ApplyInventory(obj, model);
-        _customSections.CharactersSection.Characters.Add(model);
+        _customSections.CharactersSection.Elements.Add(model);
     }
 
     private void WriteItem(string name, HoconObject obj)
@@ -125,7 +125,7 @@ public class GameAssetWriter : IDisposable
 
         var model = new ItemModel(name, description);
         ApplyAttributes(obj, model);
-        _customSections.ItemsSection.Items.Add(model);
+        _customSections.ItemsSection.Elements.Add(model);
     }
 
     private void WriteRoom(string name, HoconObject obj)
@@ -135,7 +135,7 @@ public class GameAssetWriter : IDisposable
         var model = new RoomModel(name, description);
         ApplyAttributes(obj, model);
         ApplyInventory(obj, model);
-        _customSections.RoomsSection.Rooms.Add(model);
+        _customSections.RoomsSection.Elements.Add(model);
     }
 
     private void WriteRegion(string name, HoconObject obj)
@@ -158,7 +158,7 @@ public class GameAssetWriter : IDisposable
         }
 
         ApplyAttributes(obj, model);
-        _customSections.RegionsSection.Regions.Add(model);
+        _customSections.RegionsSection.Elements.Add(model);
     }
 
     private void WriteAttribute(string name, HoconObject obj)
@@ -171,7 +171,7 @@ public class GameAssetWriter : IDisposable
              obj.GetField("visible").GetString() == "true"
         );
 
-        _customSections.AttributesSection.Attributes.Add(model);
+        _customSections.AttributesSection.Elements.Add(model);
     }
 
     private T GetOptionalFieldValue<T>(HoconObject obj, string fieldName)

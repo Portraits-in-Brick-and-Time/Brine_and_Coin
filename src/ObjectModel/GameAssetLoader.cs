@@ -60,7 +60,7 @@ public class GameAssetLoader
 
         var overworld = new Overworld(worldName.ToString(), worldDescription.ToString());
 
-        foreach (var region in customSections.RegionsSection.Regions)
+        foreach (var region in customSections.RegionsSection.Elements)
         {
             overworld.AddRegion(GetRegionByName(region.Name));
         }
@@ -83,7 +83,7 @@ public class GameAssetLoader
 
     private void LoadAttributes()
     {
-        foreach (var attrModel in customSections.AttributesSection.Attributes)
+        foreach (var attrModel in customSections.AttributesSection.Elements)
         {
             _attributes.Add(new Attribute(attrModel.Name, attrModel.Description, attrModel.Min, attrModel.Max, attrModel.Visible));
         }
@@ -91,7 +91,7 @@ public class GameAssetLoader
 
     private void LoadItems()
     {
-        foreach (var itemModel in customSections.ItemsSection.Items)
+        foreach (var itemModel in customSections.ItemsSection.Elements)
         {
             var item = new Item(itemModel.Name, itemModel.Description);
             ApplyAttributes(item, itemModel);
@@ -101,7 +101,7 @@ public class GameAssetLoader
 
     private void LoadRegions()
     {
-        foreach (var regionModel in customSections.RegionsSection.Regions)
+        foreach (var regionModel in customSections.RegionsSection.Elements)
         {
             var region = new Region(regionModel.Name, regionModel.Description);
             foreach (var (roomRef, (x, y, z)) in regionModel.Rooms)
@@ -121,7 +121,7 @@ public class GameAssetLoader
 
     private void LoadRooms()
     {
-        foreach (var roomModel in customSections.RoomsSection.Rooms)
+        foreach (var roomModel in customSections.RoomsSection.Elements)
         {
             var room = new Room(roomModel.Name, roomModel.Description);
             ApplyAttributes(room, roomModel);
@@ -133,7 +133,7 @@ public class GameAssetLoader
 
     private void LoadCharacters()
     {
-        foreach (var charModel in customSections.CharactersSection.Characters)
+        foreach (var charModel in customSections.CharactersSection.Elements)
         {
             Character character;
             if (charModel.IsNPC)

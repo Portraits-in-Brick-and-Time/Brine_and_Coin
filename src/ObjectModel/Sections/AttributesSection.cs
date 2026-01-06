@@ -5,34 +5,17 @@ using MessagePack;
 
 namespace ObjectModel.Sections;
 
-internal class AttributesSection(ElfFile file) : CustomSection(file)
+internal class AttributesSection(ElfFile file) : ModelSection<AttributeModel>(file)
 {
-    public List<AttributeModel> Attributes { get; } = [];
-
     public override string Name => ".attributes";
 
-    protected override void Write(BinaryWriter writer)
-    {
-        foreach (var attribute in Attributes)
-        {
-            writer.Write(MessagePackSerializer.Serialize(attribute));
-        }
-    }
-
-    protected override void Read(BinaryReader reader)
-    {
-        while (reader.BaseStream.Position < reader.BaseStream.Length)
-        {
-            var model = MessagePackSerializer.Deserialize<AttributeModel>(reader.BaseStream);
-            Attributes.Add(model);
-        }
-    }
+    protected override bool AddElementsToSymbolTable() => false;
 
     public int IndexOf(string name)
     {
-        for (var i = 0; i < Attributes.Count; i++)
+        for (var i = 0; i < Elements.Count; i++)
         {
-            if (Attributes[i].Name == name)
+            if (Elements[i].Name == name)
             {
                 return i;
             }

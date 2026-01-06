@@ -1,23 +1,18 @@
 using MessagePack;
+using ObjectModel.Models;
 
 namespace ObjectModel;
 
 [MessagePackObject(AllowPrivate = true)]
-internal class AttributeModel
+internal class AttributeModel : GameObjectModel
 {
-    [Key(0)]
-    public string Name { get; set; }
-
-    [Key(1)]
-    public string Description { get; set; }
-
-    [Key(2)]
+    [Key(3)]
     public int Min { get; set; }
 
-    [Key(3)]
+    [Key(4)]
     public int Max { get; set; }
 
-    [Key(4)]
+    [Key(5)]
     public bool Visible { get; set; }
 
     public AttributeModel(string name, string description, int min, int max, bool visible)
