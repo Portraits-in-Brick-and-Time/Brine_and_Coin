@@ -33,11 +33,6 @@ public class StartGamePage : MenuPage
         InitAndExecuteGame();
     }
 
-    private static PlayableCharacter CreatePlayer()
-    {
-        return new PlayableCharacter("Dave", "A young boy on a quest to find the meaning of life.");
-    }
-
     private static EndCheckResult IsGameComplete(Game game)
     {
         if (!game.Player.FindItem("Holy Grail", out _))
@@ -56,12 +51,12 @@ public class StartGamePage : MenuPage
 
     static void InitAndExecuteGame()
     {
-        var world = GameAssetLoader.LoadFile();
+        var world = GameAssetLoader.LoadFile(out var players);
 
         var gameCreator = Game.Create(
                         new GameInfo("Portraits in Brick and Time - Brine and Coin", "Brine and Coin is an open source text adventure where you experience the history of Schwäbisch Hall.", "Chris Anders"),
                         "",
-                        AssetGenerator.Retained(world, CreatePlayer()),
+                        AssetGenerator.Retained(world, players[0]),
                         new GameEndConditions(IsGameComplete, IsGameOver),
                         new GameConfiguration(new ConsoleAdapter(), FrameBuilderCollections.Console, new(90, 30), StartModes.Scene));
 

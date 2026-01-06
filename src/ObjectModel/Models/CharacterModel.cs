@@ -1,9 +1,10 @@
+using System.Collections.Generic;
 using MessagePack;
 
 namespace ObjectModel.Models;
 
 [MessagePackObject(AllowPrivate = true)]
-internal class CharacterModel : GameObjectModel
+internal class CharacterModel : GameObjectModel, IItemModel
 {
     public CharacterModel(string name, string description, bool isNPC)
     {
@@ -17,4 +18,7 @@ internal class CharacterModel : GameObjectModel
 
     [Key(3)]
     public bool IsNPC { get; set; }
+
+    [Key(4)]
+    public List<NamedRef> Items { get; set; } = [];
 }

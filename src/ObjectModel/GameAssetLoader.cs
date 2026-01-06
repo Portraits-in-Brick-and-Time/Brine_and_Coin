@@ -24,7 +24,7 @@ public class GameAssetLoader
         this.customSections = customSections;
     }
 
-    public static Overworld LoadFile()
+    public static Overworld LoadFile(out PlayableCharacter[] players)
     {
         const string path = "Assets/core_assets.elf";
         if (!File.Exists(path))
@@ -36,6 +36,7 @@ public class GameAssetLoader
         var loader = new GameAssetLoader(reader.CustomSections);
 
         loader.Load();
+        players = [.. loader._players];
 
         return loader.BuildWorld();
     }
@@ -59,7 +60,7 @@ public class GameAssetLoader
 
         var overworld = new Overworld(worldName.ToString(), worldDescription.ToString());
 
-        foreach (var region in customSections.RegionsSection.Regions)
+        foreach (var region in customSections.RegionsSection.Elements)
         {
             overworld.AddRegion(GetRegionByName(region.Name));
         }
@@ -82,7 +83,7 @@ public class GameAssetLoader
 
     private void LoadAttributes()
     {
-        foreach (var attrModel in customSections.AttributesSection.Attributes)
+        foreach (var attrModel in customSections.AttributesSection.Elements)
         {
             _attributes.Add(new Attribute(attrModel.Name, attrModel.Description, attrModel.Min, attrModel.Max, attrModel.Visible));
         }
@@ -90,7 +91,7 @@ public class GameAssetLoader
 
     private void LoadItems()
     {
-        foreach (var itemModel in customSections.ItemsSection.Items)
+        foreach (var itemModel in customSections.ItemsSection.Elements)
         {
             var item = new Item(itemModel.Name, itemModel.Description);
             ApplyAttributes(item, itemModel);
@@ -100,7 +101,7 @@ public class GameAssetLoader
 
     private void LoadRegions()
     {
-        foreach (var regionModel in customSections.RegionsSection.Regions)
+        foreach (var regionModel in customSections.RegionsSection.Elements)
         {
             var region = new Region(regionModel.Name, regionModel.Description);
             foreach (var (roomRef, (x, y, z)) in regionModel.Rooms)
@@ -120,17 +121,19 @@ public class GameAssetLoader
 
     private void LoadRooms()
     {
-        foreach (var roomModel in customSections.RoomsSection.Rooms)
+        foreach (var roomModel in customSections.RoomsSection.Elements)
         {
             var room = new Room(roomModel.Name, roomModel.Description);
             ApplyAttributes(room, roomModel);
+            AddItems(room, roomModel);
+
             _rooms.Add(room);
         }
     }
 
     private void LoadCharacters()
     {
-        foreach (var charModel in customSections.CharactersSection.Characters)
+        foreach (var charModel in customSections.CharactersSection.Elements)
         {
             Character character;
             if (charModel.IsNPC)
@@ -145,6 +148,7 @@ public class GameAssetLoader
             }
 
             ApplyAttributes(character, charModel);
+            AddItems(character, charModel);
         }
     }
 
@@ -156,17 +160,39 @@ public class GameAssetLoader
         }
     }
 
-    private Attribute GetAttributeByRef(NamedRef name)
+    private void AddItems(IItemContainer target, IItemModel model)
+    {
+        foreach (var itemRef in model.Items)
+        {
+            var item = GetItemByRef(itemRef);
+            target.AddItem(item);
+        }
+    }
+
+    Attribute GetAttributeByRef(NamedRef @ref)
     {
         foreach (var attribute in _attributes)
         {
-            if (attribute.Name == name.Name)
+            if (attribute.Name == @ref.Name)
             {
                 return attribute;
             }
         }
 
-        throw new KeyNotFoundException($"Attribute '{name}' not found.");
+        throw new KeyNotFoundException($"Attribute '{@ref}' not found.");
+    }
+
+    Item GetItemByRef(NamedRef @ref)
+    {
+        foreach (var item in _items)
+        {
+            if (item.Identifier.Name == @ref.Name)
+            {
+                return item;
+            }
+        }
+
+        throw new KeyNotFoundException($"Item '{@ref}' not found.");
     }
 
 }

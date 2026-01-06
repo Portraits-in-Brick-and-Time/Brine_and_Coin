@@ -2,6 +2,7 @@ namespace ObjectModel.IO;
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Hocon;
@@ -94,6 +95,19 @@ public class GameAssetWriter : IDisposable
         }
     }
 
+    private void ApplyInventory(HoconObject obj, IItemModel model)
+    {
+        if (!obj.ContainsKey("inventory"))
+        {
+            return;
+        }
+
+        foreach (var item in obj.GetField("inventory").GetArray())
+        {
+            model.Items.Add(new(item.GetString()));
+        }
+    }
+
     private void WriteCharacter(string name, HoconObject obj)
     {
         var description = obj.GetField("description").GetString();
@@ -101,7 +115,8 @@ public class GameAssetWriter : IDisposable
 
         var model = new CharacterModel(name, description, isNPC);
         ApplyAttributes(obj, model);
-        _customSections.CharactersSection.Characters.Add(model);
+        ApplyInventory(obj, model);
+        _customSections.CharactersSection.Elements.Add(model);
     }
 
     private void WriteItem(string name, HoconObject obj)
@@ -110,7 +125,7 @@ public class GameAssetWriter : IDisposable
 
         var model = new ItemModel(name, description);
         ApplyAttributes(obj, model);
-        _customSections.ItemsSection.Items.Add(model);
+        _customSections.ItemsSection.Elements.Add(model);
     }
 
     private void WriteRoom(string name, HoconObject obj)
@@ -119,7 +134,8 @@ public class GameAssetWriter : IDisposable
 
         var model = new RoomModel(name, description);
         ApplyAttributes(obj, model);
-        _customSections.RoomsSection.Rooms.Add(model);
+        ApplyInventory(obj, model);
+        _customSections.RoomsSection.Elements.Add(model);
     }
 
     private void WriteRegion(string name, HoconObject obj)
@@ -130,13 +146,8 @@ public class GameAssetWriter : IDisposable
         var roomDict = new Dictionary<NamedRef, Position>();
         foreach (var (roomName, roomObj) in rooms)
         {
-            var _obj = roomObj.GetObject();
             var nameRef = new NamedRef(roomName);
-            var x = int.Parse(_obj.GetField("x").GetString());
-            var y = int.Parse(_obj.GetField("y").GetString());
-            var z = int.Parse(_obj.GetField("z").GetString());
-
-            roomDict[nameRef] = new(x, y, z);
+            roomDict[nameRef] = Position.Parse(roomObj);
         }
 
         var model = new RegionModel(name, description, roomDict);
@@ -147,7 +158,7 @@ public class GameAssetWriter : IDisposable
         }
 
         ApplyAttributes(obj, model);
-        _customSections.RegionsSection.Regions.Add(model);
+        _customSections.RegionsSection.Elements.Add(model);
     }
 
     private void WriteAttribute(string name, HoconObject obj)
@@ -155,12 +166,18 @@ public class GameAssetWriter : IDisposable
         var model = new AttributeModel(
              name,
              obj.GetField("description").GetString(),
-             int.Parse(obj.GetField("min").GetString()),
-             int.Parse(obj.GetField("max").GetString()),
+             GetOptionalFieldValue<int>(obj, "min"),
+             GetOptionalFieldValue<int>(obj, "max"),
              obj.GetField("visible").GetString() == "true"
         );
 
-        _customSections.AttributesSection.Attributes.Add(model);
+        _customSections.AttributesSection.Elements.Add(model);
+    }
+
+    private T GetOptionalFieldValue<T>(HoconObject obj, string fieldName)
+        where T : IParsable<T>
+    {
+        return obj.ContainsKey(fieldName) ? T.Parse(obj.GetField(fieldName).GetString(), CultureInfo.InvariantCulture) : default;
     }
 
     public void Close()

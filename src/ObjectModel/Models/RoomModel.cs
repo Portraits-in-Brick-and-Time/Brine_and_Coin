@@ -4,10 +4,10 @@ using MessagePack;
 namespace ObjectModel.Models;
 
 [MessagePackObject(AllowPrivate = true)]
-internal class RoomModel : GameObjectModel
+internal class RoomModel : GameObjectModel, IItemModel
 {
     [Key(3)]
-    public List<NamedRef> Items { get; set; }
+    public List<NamedRef> Items { get; set; } = [];
 
     public RoomModel(string name, string description)
     {
