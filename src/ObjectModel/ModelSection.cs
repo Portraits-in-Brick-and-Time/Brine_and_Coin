@@ -15,14 +15,15 @@ internal abstract class ModelSection<T>(ElfFile file) : CustomSection(file)
 
     protected override void Write(BinaryWriter writer)
     {
-        foreach (var element in Elements)
+        for (int i = 0; i < Elements.Count; i++)
         {
+            T element = Elements[i];
             var start = (ulong)writer.BaseStream.Position;
             writer.Write(MessagePackSerializer.Serialize(element));
 
             if (AddElementsToSymbolTable())
             {
-                AddSymbol(element.Name, start, (ulong)writer.BaseStream.Position - start);
+                AddSymbol(element.Name, start, (ulong)i);
             }
         }
     }
