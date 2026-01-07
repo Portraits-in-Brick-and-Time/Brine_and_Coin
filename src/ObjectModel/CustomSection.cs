@@ -27,7 +27,7 @@ internal abstract class CustomSection(ElfFile file)
         Section = new ElfStreamSection(ElfSectionSpecialType.Text, new MemoryStream())
         {
             Name = Name,
-            Flags = ElfSectionFlags.Alloc | ElfSectionFlags.Group | ElfSectionFlags.Compressed
+            Flags = ElfSectionFlags.Alloc | ElfSectionFlags.Group
         };
 
         File.Add(Section);
