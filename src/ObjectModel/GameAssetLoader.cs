@@ -146,7 +146,7 @@ public class GameAssetLoader
             return null;
         }
         
-        return new( transition =>
+        return new(transition =>
         {
             var reaction = Locator.Current.GetService<Evaluator>().Evaluate<Reaction>(code);
             return new(reaction, true);
