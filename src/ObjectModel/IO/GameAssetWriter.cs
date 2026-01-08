@@ -108,6 +108,19 @@ public class GameAssetWriter : IDisposable
         }
     }
 
+    private void ApplyNpcs(HoconObject obj, RoomModel model)
+    {
+        if (!obj.ContainsKey("npcs"))
+        {
+            return;
+        }
+
+        foreach (var character in obj.GetField("npcs").GetArray())
+        {
+            model.NPCS.Add(new(character.GetString()));
+        }
+    }
+
     private void WriteCharacter(string name, HoconObject obj)
     {
         var description = obj.GetField("description").GetString();
@@ -135,6 +148,8 @@ public class GameAssetWriter : IDisposable
         var model = new RoomModel(name, description);
         ApplyAttributes(obj, model);
         ApplyInventory(obj, model);
+        ApplyNpcs(obj, model);
+
         _customSections.RoomsSection.Elements.Add(model);
     }
 
@@ -152,12 +167,13 @@ public class GameAssetWriter : IDisposable
 
         var model = new RegionModel(name, description, roomDict);
 
-        if (obj.ContainsKey("startRoom"))
+        if (obj.TryGetValue("startRoom", out HoconField value))
         {
-            model.StartRoom = new(obj["startRoom"].GetString());
+            model.StartRoom = new(value.GetString());
         }
 
         ApplyAttributes(obj, model);
+        
         _customSections.RegionsSection.Elements.Add(model);
     }
 

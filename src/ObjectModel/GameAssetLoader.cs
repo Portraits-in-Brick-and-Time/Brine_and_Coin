@@ -1,9 +1,11 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 using NetAF.Assets;
 using NetAF.Assets.Attributes;
 using NetAF.Assets.Characters;
 using NetAF.Assets.Locations;
+using NetAF.Commands;
 using ObjectModel.IO;
 using ObjectModel.Models;
 
@@ -126,8 +128,18 @@ public class GameAssetLoader
             var room = new Room(roomModel.Name, roomModel.Description);
             ApplyAttributes(room, roomModel);
             AddItems(room, roomModel);
+            AddNpcs(room, roomModel);
 
             _rooms.Add(room);
+        }
+    }
+
+    private void AddNpcs(Room target, RoomModel model)
+    {
+        foreach (var characterRef in model.NPCS)
+        {
+            var character = GetByRef(characterRef, _npcs);
+            target.AddCharacter(character);
         }
     }
 
@@ -164,7 +176,7 @@ public class GameAssetLoader
     {
         foreach (var itemRef in model.Items)
         {
-            var item = GetItemByRef(itemRef);
+            var item = GetByRef(itemRef, _items);
             target.AddItem(item);
         }
     }
@@ -182,13 +194,14 @@ public class GameAssetLoader
         throw new KeyNotFoundException($"Attribute '{@ref}' not found.");
     }
 
-    Item GetItemByRef(NamedRef @ref)
+    T GetByRef<T>(NamedRef @ref, IList<T> collection)
+        where T : IExaminable
     {
-        foreach (var item in _items)
+        foreach (var element in collection)
         {
-            if (item.Identifier.Name == @ref.Name)
+            if (element.Identifier.Name == @ref.Name)
             {
-                return item;
+                return element;
             }
         }
 
