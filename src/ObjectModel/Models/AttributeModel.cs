@@ -6,13 +6,13 @@ namespace ObjectModel;
 [MessagePackObject(AllowPrivate = true)]
 internal class AttributeModel : GameObjectModel
 {
-    [Key(3)]
+    [Key(4)]
     public int Min { get; set; }
 
-    [Key(4)]
+    [Key(5)]
     public int Max { get; set; }
 
-    [Key(5)]
+    [Key(6)]
     public bool Visible { get; set; }
 
     public AttributeModel(string name, string description, int min, int max, bool visible)

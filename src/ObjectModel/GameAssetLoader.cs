@@ -98,7 +98,7 @@ public class GameAssetLoader
     {
         foreach (var itemModel in customSections.ItemsSection.Elements)
         {
-            var item = new Item(itemModel.Name, itemModel.Description);
+            var item = new Item(itemModel.Name, itemModel.Description, commands: GetCommands(itemModel));
             ApplyAttributes(item, itemModel);
             _items.Add(item);
         }
@@ -108,7 +108,7 @@ public class GameAssetLoader
     {
         foreach (var regionModel in customSections.RegionsSection.Elements)
         {
-            var region = new Region(regionModel.Name, regionModel.Description);
+            var region = new Region(regionModel.Name, regionModel.Description, commands: GetCommands(regionModel));
             foreach (var (roomRef, (x, y, z)) in regionModel.Rooms)
             {
                 region.AddRoom(_rooms.Find(r => r.Identifier.Name == roomRef.Name), x, y, z);
@@ -129,6 +129,7 @@ public class GameAssetLoader
         foreach (var roomModel in customSections.RoomsSection.Elements)
         {
             var room = new Room(roomModel.Name, roomModel.Description,
+                commands: GetCommands(roomModel),
                 enterCallback: ApplyRoomTransition(roomModel.OnEnter),
                 exitCallback: ApplyRoomTransition(roomModel.OnExit)
             );
@@ -168,15 +169,16 @@ public class GameAssetLoader
     {
         foreach (var charModel in customSections.CharactersSection.Elements)
         {
+            var commands = GetCommands(charModel);
             Character character;
             if (charModel.IsNPC)
             {
-                character = new NonPlayableCharacter(charModel.Name, charModel.Description);
+                character = new NonPlayableCharacter(charModel.Name, charModel.Description, commands: commands);
                 _npcs.Add((NonPlayableCharacter)character);
             }
             else
             {
-                character = new PlayableCharacter(charModel.Name, charModel.Description);
+                character = new PlayableCharacter(charModel.Name, charModel.Description, commands: commands);
                 _players.Add((PlayableCharacter)character);
             }
 
@@ -191,6 +193,24 @@ public class GameAssetLoader
         {
             target.Attributes.Add(GetAttributeByRef(name), value);
         }
+    }
+
+    private static CustomCommand[] GetCommands(GameObjectModel model)
+    {
+        var cmds = new List<CustomCommand>();
+        foreach (var @ref in model.Commands)
+        {
+            if (CommandStore.TryGet(@ref.Name, out var cmd))
+            {
+                cmds.Add(cmd);
+            }
+            else
+            {
+                throw new KeyNotFoundException($"Command '{@ref.Name}' not found.");
+            }
+        }
+
+        return [.. cmds];
     }
 
     private void AddItems(IItemContainer target, IItemModel model)

@@ -8,16 +8,16 @@ namespace ObjectModel.Models;
 [MessagePackObject(AllowPrivate = true)]
 internal class RoomModel : GameObjectModel, IItemModel
 {
-    [Key(3)]
+    [Key(4)]
     public List<NamedRef> Items { get; set; } = [];
 
-    [Key(4)]
+    [Key(5)]
     public List<NamedRef> NPCS { get; set; } = [];
 
-    [Key(5)]
+    [Key(6)]
     public List<IEvaluable> OnEnter { get; set; } = [];
 
-    [Key(6)]
+    [Key(7)]
     public List<IEvaluable> OnExit { get; set; } = [];
 
     public RoomModel(string name, string description)

@@ -97,6 +97,19 @@ public class GameAssetWriter : IDisposable
         }
     }
 
+    private void ApplyCommands(HoconObject obj, GameObjectModel model)
+    {
+        if (!obj.ContainsKey("commands"))
+        {
+            return;
+        }
+
+        foreach (var name in obj.GetField("commands").GetArray())
+        {
+            model.Commands.Add(new NamedRef(name.GetString()));
+        }
+    }
+
     private void ApplyInventory(HoconObject obj, IItemModel model)
     {
         if (!obj.ContainsKey("inventory"))
@@ -129,8 +142,11 @@ public class GameAssetWriter : IDisposable
         var isNPC = obj.GetField("isNPC").GetString() == "true";
 
         var model = new CharacterModel(name, description, isNPC);
+
         ApplyAttributes(obj, model);
         ApplyInventory(obj, model);
+        ApplyCommands(obj, model);
+
         _customSections.CharactersSection.Elements.Add(model);
     }
 
@@ -139,7 +155,10 @@ public class GameAssetWriter : IDisposable
         var description = obj.GetField("description").GetString();
 
         var model = new ItemModel(name, description);
+
         ApplyAttributes(obj, model);
+        ApplyCommands(obj, model);
+
         _customSections.ItemsSection.Elements.Add(model);
     }
 
@@ -148,11 +167,13 @@ public class GameAssetWriter : IDisposable
         var description = obj.GetField("description").GetString();
 
         var model = new RoomModel(name, description);
+
         ApplyAttributes(obj, model);
         ApplyInventory(obj, model);
         ApplyNpcs(obj, model);
         ApplyCode(obj, model.OnEnter, "on_enter");
         ApplyCode(obj, model.OnExit, "on_exit");
+        ApplyCommands(obj, model);
 
         _customSections.RoomsSection.Elements.Add(model);
     }
@@ -198,6 +219,7 @@ public class GameAssetWriter : IDisposable
         }
 
         ApplyAttributes(obj, model);
+        ApplyCommands(obj, model);
 
         _customSections.RegionsSection.Elements.Add(model);
     }
