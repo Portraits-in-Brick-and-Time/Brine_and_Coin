@@ -194,11 +194,11 @@ public class GameAssetWriter : IDisposable
             var name = exitObj.GetField("name").GetString();
             var description = exitObj.GetField("description").GetString();
             var isLocked = GetOptionalFieldValue<bool>(exitObj, "isLocked");
-            
+
             model.Exits.Add(new ExitModel()
             {
                 Direction = Enum.Parse<Direction>(direction, true),
-                Name = name,
+                NameRef = name,
                 Description = description,
                 IsLocked = isLocked
             });

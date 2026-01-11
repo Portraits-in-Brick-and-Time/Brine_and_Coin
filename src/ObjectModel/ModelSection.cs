@@ -23,7 +23,7 @@ internal abstract class ModelSection<T>(ElfFile file) : CustomSection(file)
 
             if (AddElementsToSymbolTable())
             {
-                AddSymbol(element.Name, start, (ulong)i);
+                AddSymbol(element.NameRef, start, (ulong)i);
             }
         }
     }

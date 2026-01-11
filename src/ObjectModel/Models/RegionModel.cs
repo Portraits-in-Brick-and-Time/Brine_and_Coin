@@ -21,7 +21,7 @@ internal class RegionModel : GameObjectModel
 
     public RegionModel(string name, string description, Dictionary<NamedRef, Position> rooms, NamedRef? startRoom = null)
     {
-        Name = name;
+        NameRef = name;
         Description = description;
         Rooms = rooms;
         StartRoom = startRoom;

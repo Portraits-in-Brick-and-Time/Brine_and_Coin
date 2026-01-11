@@ -6,7 +6,7 @@ namespace ObjectModel;
 
 internal abstract class CustomSection(ElfFile file)
 {
-    protected ElfStreamSection Section;
+    internal ElfStreamSection Section;
     protected ElfFile File = file;
     private ElfSymbolTable _symbolTable;
 

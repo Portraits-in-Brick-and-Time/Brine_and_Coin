@@ -15,9 +15,9 @@ internal class AttributeModel : GameObjectModel
     [Key(6)]
     public bool Visible { get; set; }
 
-    public AttributeModel(string name, string description, int min, int max, bool visible)
+    public AttributeModel(IndexedRef nameRef, string description, int min, int max, bool visible)
     {
-        Name = name;
+        NameRef = nameRef;
         Description = description;
         Min = min;
         Max = max;
@@ -26,6 +26,6 @@ internal class AttributeModel : GameObjectModel
 
     public AttributeModel()
     {
-        
+
     }
 }

@@ -15,7 +15,7 @@ internal class AttributesSection(ElfFile file) : ModelSection<AttributeModel>(fi
     {
         for (var i = 0; i < Elements.Count; i++)
         {
-            if (Elements[i].Name == name)
+            if (Elements[i].NameRef == name)
             {
                 return i;
             }

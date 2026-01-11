@@ -7,7 +7,7 @@ internal class ItemModel : GameObjectModel
 {
     public ItemModel(string name, string description)
     {
-        Name = name;
+        NameRef = name;
         Description = description;
     }
     public ItemModel()

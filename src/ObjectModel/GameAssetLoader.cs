@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using LibObjectFile.Elf;
 using NetAF.Assets;
 using NetAF.Assets.Attributes;
 using NetAF.Assets.Characters;
@@ -22,11 +23,13 @@ public class GameAssetLoader
     private readonly List<NonPlayableCharacter> _npcs = [];
     private readonly List<Room> _rooms = [];
     private readonly List<Region> _regions = [];
-    private readonly CustomSections customSections;
+    private readonly CustomSections _customSections;
+    private readonly ElfSymbolTable _symbolTable;
 
-    private GameAssetLoader(CustomSections customSections)
+    private GameAssetLoader(CustomSections customSections, ElfSymbolTable symbolTable)
     {
-        this.customSections = customSections;
+        this._customSections = customSections;
+        this._symbolTable = symbolTable;
     }
 
     public static Overworld LoadFile(out PlayableCharacter[] players)
@@ -38,7 +41,7 @@ public class GameAssetLoader
         }
 
         var reader = new GameAssetReader(File.OpenRead(path));
-        var loader = new GameAssetLoader(reader.CustomSections);
+        var loader = new GameAssetLoader(reader.CustomSections, reader.SymbolTable);
 
         loader.Load();
         players = [.. loader._players];
@@ -60,14 +63,14 @@ public class GameAssetLoader
 
     private Overworld BuildWorld()
     {
-        var worldName = customSections.MetaSection.Properties["world.name"];
-        var worldDescription = customSections.MetaSection.Properties["world.description"];
+        var worldName = _customSections.MetaSection.Properties["world.name"];
+        var worldDescription = _customSections.MetaSection.Properties["world.description"];
 
         var overworld = new Overworld(worldName.ToString(), worldDescription.ToString());
 
-        foreach (var region in customSections.RegionsSection.Elements)
+        foreach (var region in _customSections.RegionsSection.Elements)
         {
-            overworld.AddRegion(GetRegionByName(region.Name));
+            overworld.AddRegion(GetRegionByRef(region.NameRef));
         }
 
         return overworld;
@@ -102,42 +105,50 @@ public class GameAssetLoader
         });
     }
 
-    private Region GetRegionByName(string name)
+    private Region GetRegionByRef(IndexedRef @ref)
     {
-        foreach (var region in _regions)
+        if (@ref.Index < 0 || @ref.Index > _regions.Count)
         {
-            if (region.Identifier.Name == name)
-            {
-                return region;
-            }
+            throw new System.IndexOutOfRangeException($"Region {@ref.Index} not found.");
         }
 
-        throw new KeyNotFoundException($"Region '{name}' not found.");
+        return _regions[@ref.Index];
     }
 
     private void LoadAttributes()
     {
-        foreach (var attrModel in customSections.AttributesSection.Elements)
+        foreach (var attrModel in _customSections.AttributesSection.Elements)
         {
-            _attributes.Add(new Attribute(attrModel.Name, attrModel.Description, attrModel.Min, attrModel.Max, attrModel.Visible));
+            var symbol = GetSymbolByRef(attrModel.NameRef, _customSections.AttributesSection);
+            _attributes.Add(new Attribute(symbol.Name.Value, attrModel.Description, attrModel.Min, attrModel.Max, attrModel.Visible));
         }
+    }
+
+    ElfSymbol GetSymbolByRef(IndexedRef @ref, CustomSection section)
+    {
+        var sectionSymbols = _symbolTable.Entries.Where(entry => entry.SectionLink.Section == section.Section).ToArray();
+
+        return sectionSymbols[@ref.Index];
     }
 
     private void LoadItems()
     {
-        foreach (var itemModel in customSections.ItemsSection.Elements)
+        foreach (var itemModel in _customSections.ItemsSection.Elements)
         {
-            var item = new Item(itemModel.Name, itemModel.Description, commands: GetCommands(itemModel));
+            var symbol = GetSymbolByRef(itemModel.NameRef, _customSections.ItemsSection);
+            var item = new Item(symbol.Name.Value, itemModel.Description, commands: GetCommands(itemModel));
             ApplyAttributes(item, itemModel);
+
             _items.Add(item);
         }
     }
 
     private void LoadRegions()
     {
-        foreach (var regionModel in customSections.RegionsSection.Elements)
+        foreach (var regionModel in _customSections.RegionsSection.Elements)
         {
-            var region = new Region(regionModel.Name, regionModel.Description, commands: GetCommands(regionModel));
+            var symbol = GetSymbolByRef(regionModel.NameRef, _customSections.RegionsSection);
+            var region = new Region(symbol.Name.Value, regionModel.Description, commands: GetCommands(regionModel));
             foreach (var (roomRef, (x, y, z)) in regionModel.Rooms)
             {
                 region.AddRoom(_rooms.Find(r => r.Identifier.Name == roomRef.Name), x, y, z);
@@ -155,9 +166,10 @@ public class GameAssetLoader
 
     private void LoadRooms()
     {
-        foreach (var roomModel in customSections.RoomsSection.Elements)
+        foreach (var roomModel in _customSections.RoomsSection.Elements)
         {
-            var room = new Room(roomModel.Name, roomModel.Description,
+            var symbol = GetSymbolByRef(roomModel.NameRef, _customSections.ItemsSection);
+            var room = new Room(symbol.Name.Value, roomModel.Description,
                 commands: GetCommands(roomModel),
                 exits: GetExits(roomModel),
                 enterCallback: ApplyRoomTransition(roomModel.OnEnter),
@@ -174,10 +186,10 @@ public class GameAssetLoader
     private Exit[] GetExits(RoomModel model)
     {
         var exits = new List<Exit>();
-        
+
         foreach (var exitModel in model.Exits)
         {
-            var exit = new Exit(exitModel.Direction, exitModel.IsLocked, new(exitModel.Name),
+            var exit = new Exit(exitModel.Direction, exitModel.IsLocked, new(exitModel.NameRef),
                 new Description(exitModel.Description));
             exits.Add(exit);
         }
@@ -191,7 +203,7 @@ public class GameAssetLoader
         {
             return null;
         }
-        
+
         return new(transition =>
         {
             Evaluator evaluator = Locator.Current.GetService<Evaluator>();
@@ -211,18 +223,19 @@ public class GameAssetLoader
 
     private void LoadCharacters()
     {
-        foreach (var charModel in customSections.CharactersSection.Elements)
+        foreach (var charModel in _customSections.CharactersSection.Elements)
         {
+            var symbol = GetSymbolByRef(charModel.NameRef, _customSections.CharactersSection);
             var commands = GetCommands(charModel);
             Character character;
             if (charModel.IsNPC)
             {
-                character = new NonPlayableCharacter(charModel.Name, charModel.Description, commands: commands);
+                character = new NonPlayableCharacter(symbol.Name.Value, charModel.Description, commands: commands);
                 _npcs.Add((NonPlayableCharacter)character);
             }
             else
             {
-                character = new PlayableCharacter(charModel.Name, charModel.Description, commands: CreatePersistentCommands().Concat(commands).ToArray());
+                character = new PlayableCharacter(symbol.Name.Value, charModel.Description, commands: CreatePersistentCommands().Concat(commands).ToArray());
                 _players.Add((PlayableCharacter)character);
             }
 

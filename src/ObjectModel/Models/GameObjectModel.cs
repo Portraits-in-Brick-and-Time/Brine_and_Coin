@@ -6,7 +6,7 @@ namespace ObjectModel.Models;
 internal abstract class GameObjectModel
 {
     [Key(0)]
-    public string Name { get; set; }
+    public IndexedRef NameRef { get; set; }
 
     [Key(1)]
     public string Description { get; set; }

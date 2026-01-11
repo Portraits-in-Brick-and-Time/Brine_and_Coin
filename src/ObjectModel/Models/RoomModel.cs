@@ -22,9 +22,9 @@ internal class RoomModel : GameObjectModel, IItemModel
     [Key(8)]
     public List<IEvaluable> OnExit { get; set; } = [];
 
-    public RoomModel(string name, string description)
+    public RoomModel(IndexedRef nameRef, string description)
     {
-        Name = name;
+        NameRef = nameRef;
         Description = description;
     }
 }

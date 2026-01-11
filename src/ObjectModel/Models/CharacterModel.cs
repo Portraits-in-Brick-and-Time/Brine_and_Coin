@@ -8,7 +8,7 @@ internal class CharacterModel : GameObjectModel, IItemModel
 {
     public CharacterModel(string name, string description, bool isNPC)
     {
-        Name = name;
+        NameRef = name;
         Description = description;
         IsNPC = isNPC;
     }
