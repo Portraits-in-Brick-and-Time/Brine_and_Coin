@@ -1,11 +1,14 @@
 using BrineAndCoin.Core;
-using NetAF.Assets.Characters;
+using NetAF.Interpretation;
 using NetAF.Logic;
+using NetAF.Logic.Modes;
 using NetAF.Rendering.FrameBuilders;
 using NetAF.Targets.Console;
 using ObjectModel;
+using ObjectModel.Evaluation;
 using Shell.Core;
 using SoundFlow.Backends.MiniAudio;
+using SoundFlow.Editing.Mapping;
 using SoundFlow.Structs;
 using Splat;
 
@@ -14,6 +17,7 @@ namespace BrineAndCoin;
 public class StartGamePage : MenuPage
 {
     public override string? Title => "Start Game";
+    protected override bool RenderTitle { get; } = false;
 
     protected override void Render()
     {
@@ -28,6 +32,7 @@ public class StartGamePage : MenuPage
         Locator.CurrentMutable.RegisterConstant(playbackDevice);
         Locator.CurrentMutable.RegisterConstant(writer);
 
+        Locator.CurrentMutable.RegisterConstant(new Evaluator());
         //await writer.PlayAsync("Assets/Texts/intro.txt", "Assets/Voice/intro.mp3");
 
         InitAndExecuteGame();
@@ -51,14 +56,39 @@ public class StartGamePage : MenuPage
 
     static void InitAndExecuteGame()
     {
+        var clock = new Clock();
+        // Commands have to be added before the asset file is being loaded
+        CommandStore.Add("clock.show", clock.CreateCommand());
+
         var world = GameAssetLoader.LoadFile(out var players);
+
+        var sceneInterpreter = new InputInterpreter
+        (
+            new FrameCommandInterpreter(),
+            new GlobalCommandInterpreter(),
+            new ExecutionCommandInterpreter(),
+            new CustomCommandInterpreter(),
+            new SceneCommandInterpreter()
+        );
+
+        var configuration = new GameConfiguration(new ConsoleAdapter(), FrameBuilderCollections.Console, new(90, 30), StartModes.Scene);
+
+        // change configuration prevent using the normal persistence interpreter as this is handled by custom commands
+        configuration.InterpreterProvider.Register(typeof(SceneMode), sceneInterpreter);
 
         var gameCreator = Game.Create(
                         new GameInfo("Portraits in Brick and Time - Brine and Coin", "Brine and Coin is an open source text adventure where you experience the history of Schwäbisch Hall.", "Chris Anders"),
                         "",
                         AssetGenerator.Retained(world, players[0]),
                         new GameEndConditions(IsGameComplete, IsGameOver),
-                        new GameConfiguration(new ConsoleAdapter(), FrameBuilderCollections.Console, new(90, 30), StartModes.Scene));
+                        configuration,
+                        game =>
+                        {
+                            Locator.CurrentMutable.RegisterConstant(game);
+
+                            clock.Init(DateTime.Now);
+                            Locator.CurrentMutable.RegisterConstant(clock);
+                        });
 
         GameExecutor.Execute(gameCreator, new ConsoleExecutionController());
     }

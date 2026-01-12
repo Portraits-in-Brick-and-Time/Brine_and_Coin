@@ -1,0 +1,14 @@
+// Project-local debug tasks
+//
+// For more documentation on how to configure debug tasks,
+// see: https://zed.dev/docs/debugger
+[
+  {
+    "label": "Debug",
+    "adapter": "netcoredbg",
+    "request": "launch",
+    "preLaunchTask": "build",
+    "program": "${workspaceFolder}src/Shell/bin/Debug/net10.0/Portraits_in_Brick_and_Time_-_Brine_And_Coin.dll",
+    "cwd": "${workspaceFolder}",
+  },
+]

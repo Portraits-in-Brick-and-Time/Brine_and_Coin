@@ -5,9 +5,13 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using Hocon;
 using LibObjectFile.Elf;
+using NetAF.Assets.Locations;
+using ObjectModel.Evaluation;
 using ObjectModel.Models;
+using ObjectModel.Models.Code;
 
 public class GameAssetWriter : IDisposable
 {
@@ -95,6 +99,19 @@ public class GameAssetWriter : IDisposable
         }
     }
 
+    private void ApplyCommands(HoconObject obj, GameObjectModel model)
+    {
+        if (!obj.ContainsKey("commands"))
+        {
+            return;
+        }
+
+        foreach (var name in obj.GetField("commands").GetArray())
+        {
+            model.Commands.Add(new NamedRef(name.GetString()));
+        }
+    }
+
     private void ApplyInventory(HoconObject obj, IItemModel model)
     {
         if (!obj.ContainsKey("inventory"))
@@ -108,14 +125,30 @@ public class GameAssetWriter : IDisposable
         }
     }
 
+    private void ApplyNpcs(HoconObject obj, RoomModel model)
+    {
+        if (!obj.ContainsKey("npcs"))
+        {
+            return;
+        }
+
+        foreach (var character in obj.GetField("npcs").GetArray())
+        {
+            model.NPCS.Add(new(character.GetString()));
+        }
+    }
+
     private void WriteCharacter(string name, HoconObject obj)
     {
         var description = obj.GetField("description").GetString();
         var isNPC = obj.GetField("isNPC").GetString() == "true";
 
         var model = new CharacterModel(name, description, isNPC);
+
         ApplyAttributes(obj, model);
         ApplyInventory(obj, model);
+        ApplyCommands(obj, model);
+
         _customSections.CharactersSection.Elements.Add(model);
     }
 
@@ -124,7 +157,10 @@ public class GameAssetWriter : IDisposable
         var description = obj.GetField("description").GetString();
 
         var model = new ItemModel(name, description);
+
         ApplyAttributes(obj, model);
+        ApplyCommands(obj, model);
+
         _customSections.ItemsSection.Elements.Add(model);
     }
 
@@ -133,9 +169,61 @@ public class GameAssetWriter : IDisposable
         var description = obj.GetField("description").GetString();
 
         var model = new RoomModel(name, description);
+
         ApplyAttributes(obj, model);
         ApplyInventory(obj, model);
+        ApplyNpcs(obj, model);
+        ApplyExits(obj, model);
+        ApplyCode(obj, model.OnEnter, "on_enter");
+        ApplyCode(obj, model.OnExit, "on_exit");
+        ApplyCommands(obj, model);
+
         _customSections.RoomsSection.Elements.Add(model);
+    }
+
+    private void ApplyExits(HoconObject obj, RoomModel model)
+    {
+        if (!obj.ContainsKey("exits"))
+        {
+            return;
+        }
+
+        foreach (var (direction, value) in obj.GetField("exits").GetObject())
+        {
+            var exitObj = value.GetObject();
+            var name = exitObj.GetField("name").GetString();
+            var description = exitObj.GetField("description").GetString();
+            var isLocked = GetOptionalFieldValue<bool>(exitObj, "isLocked");
+            
+            model.Exits.Add(new ExitModel()
+            {
+                Direction = Enum.Parse<Direction>(direction, true),
+                Name = name,
+                Description = description,
+                IsLocked = isLocked
+            });
+        }
+    }
+
+    private void ApplyCode(HoconObject obj, List<IEvaluable> code, string objName)
+    {
+        if (!obj.ContainsKey(objName))
+        {
+            return;
+        }
+
+        foreach (var c in obj[objName].GetObject())
+        {
+            switch (c.Key)
+            {
+                case "reaction":
+                    code.Add(ReactionModel.FromObject(c));
+                    break;
+                default:
+                    code.Add(VariableDefinitonModel.FromObject(c));
+                    break;
+            }
+        }
     }
 
     private void WriteRegion(string name, HoconObject obj)
@@ -152,12 +240,14 @@ public class GameAssetWriter : IDisposable
 
         var model = new RegionModel(name, description, roomDict);
 
-        if (obj.ContainsKey("startRoom"))
+        if (obj.TryGetValue("startRoom", out HoconField value))
         {
-            model.StartRoom = new(obj["startRoom"].GetString());
+            model.StartRoom = new(value.GetString());
         }
 
         ApplyAttributes(obj, model);
+        ApplyCommands(obj, model);
+
         _customSections.RegionsSection.Elements.Add(model);
     }
 

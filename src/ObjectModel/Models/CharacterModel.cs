@@ -16,9 +16,9 @@ internal class CharacterModel : GameObjectModel, IItemModel
     {
     }
 
-    [Key(3)]
+    [Key(4)]
     public bool IsNPC { get; set; }
 
-    [Key(4)]
+    [Key(5)]
     public List<NamedRef> Items { get; set; } = [];
 }

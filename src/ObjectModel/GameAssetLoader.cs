@@ -1,11 +1,16 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using NetAF.Assets;
 using NetAF.Assets.Attributes;
 using NetAF.Assets.Characters;
 using NetAF.Assets.Locations;
+using NetAF.Commands;
+using NetAF.Commands.Persistence;
+using ObjectModel.Evaluation;
 using ObjectModel.IO;
 using ObjectModel.Models;
+using Splat;
 
 namespace ObjectModel;
 
@@ -68,6 +73,35 @@ public class GameAssetLoader
         return overworld;
     }
 
+    private CustomCommand[] CreatePersistentCommands()
+    {
+        var folder = Path.Combine(
+            System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData),
+            "BrineAndCoin");
+        var path = Path.Combine(
+            folder,
+            "savegame.json"
+        );
+
+        if (!Directory.Exists(folder))
+        {
+            Directory.CreateDirectory(folder);
+        }
+
+        return [
+            ConvertCommand(new Load(path)),
+            ConvertCommand(new Save(path)),
+        ];
+    }
+
+    private static CustomCommand ConvertCommand(ICommand command)
+    {
+        return new CustomCommand(command.Help, true, true, (game, args) =>
+        {
+            return command.Invoke(game);
+        });
+    }
+
     private Region GetRegionByName(string name)
     {
         foreach (var region in _regions)
@@ -93,7 +127,7 @@ public class GameAssetLoader
     {
         foreach (var itemModel in customSections.ItemsSection.Elements)
         {
-            var item = new Item(itemModel.Name, itemModel.Description);
+            var item = new Item(itemModel.Name, itemModel.Description, commands: GetCommands(itemModel));
             ApplyAttributes(item, itemModel);
             _items.Add(item);
         }
@@ -103,7 +137,7 @@ public class GameAssetLoader
     {
         foreach (var regionModel in customSections.RegionsSection.Elements)
         {
-            var region = new Region(regionModel.Name, regionModel.Description);
+            var region = new Region(regionModel.Name, regionModel.Description, commands: GetCommands(regionModel));
             foreach (var (roomRef, (x, y, z)) in regionModel.Rooms)
             {
                 region.AddRoom(_rooms.Find(r => r.Identifier.Name == roomRef.Name), x, y, z);
@@ -123,11 +157,55 @@ public class GameAssetLoader
     {
         foreach (var roomModel in customSections.RoomsSection.Elements)
         {
-            var room = new Room(roomModel.Name, roomModel.Description);
+            var room = new Room(roomModel.Name, roomModel.Description,
+                commands: GetCommands(roomModel),
+                exits: GetExits(roomModel),
+                enterCallback: ApplyRoomTransition(roomModel.OnEnter),
+                exitCallback: ApplyRoomTransition(roomModel.OnExit)
+            );
             ApplyAttributes(room, roomModel);
             AddItems(room, roomModel);
+            AddNpcs(room, roomModel);
 
             _rooms.Add(room);
+        }
+    }
+
+    private Exit[] GetExits(RoomModel model)
+    {
+        var exits = new List<Exit>();
+        
+        foreach (var exitModel in model.Exits)
+        {
+            var exit = new Exit(exitModel.Direction, exitModel.IsLocked, new(exitModel.Name),
+                new Description(exitModel.Description));
+            exits.Add(exit);
+        }
+
+        return [.. exits];
+    }
+
+    private RoomTransitionCallback ApplyRoomTransition(List<IEvaluable> code)
+    {
+        if (code.Count == 0)
+        {
+            return null;
+        }
+        
+        return new(transition =>
+        {
+            Evaluator evaluator = Locator.Current.GetService<Evaluator>();
+            var reaction = evaluator.Evaluate<Reaction>(code, evaluator.RootScope);
+            return new(reaction, true);
+        });
+    }
+
+    private void AddNpcs(Room target, RoomModel model)
+    {
+        foreach (var characterRef in model.NPCS)
+        {
+            var character = GetByRef(characterRef, _npcs);
+            target.AddCharacter(character);
         }
     }
 
@@ -135,15 +213,16 @@ public class GameAssetLoader
     {
         foreach (var charModel in customSections.CharactersSection.Elements)
         {
+            var commands = GetCommands(charModel);
             Character character;
             if (charModel.IsNPC)
             {
-                character = new NonPlayableCharacter(charModel.Name, charModel.Description);
+                character = new NonPlayableCharacter(charModel.Name, charModel.Description, commands: commands);
                 _npcs.Add((NonPlayableCharacter)character);
             }
             else
             {
-                character = new PlayableCharacter(charModel.Name, charModel.Description);
+                character = new PlayableCharacter(charModel.Name, charModel.Description, commands: CreatePersistentCommands().Concat(commands).ToArray());
                 _players.Add((PlayableCharacter)character);
             }
 
@@ -160,11 +239,29 @@ public class GameAssetLoader
         }
     }
 
+    private static CustomCommand[] GetCommands(GameObjectModel model)
+    {
+        var cmds = new List<CustomCommand>();
+        foreach (var @ref in model.Commands)
+        {
+            if (CommandStore.TryGet(@ref.Name, out var cmd))
+            {
+                cmds.Add(cmd);
+            }
+            else
+            {
+                throw new KeyNotFoundException($"Command '{@ref.Name}' not found.");
+            }
+        }
+
+        return [.. cmds];
+    }
+
     private void AddItems(IItemContainer target, IItemModel model)
     {
         foreach (var itemRef in model.Items)
         {
-            var item = GetItemByRef(itemRef);
+            var item = GetByRef(itemRef, _items);
             target.AddItem(item);
         }
     }
@@ -182,17 +279,17 @@ public class GameAssetLoader
         throw new KeyNotFoundException($"Attribute '{@ref}' not found.");
     }
 
-    Item GetItemByRef(NamedRef @ref)
+    T GetByRef<T>(NamedRef @ref, IList<T> collection)
+        where T : IExaminable
     {
-        foreach (var item in _items)
+        foreach (var element in collection)
         {
-            if (item.Identifier.Name == @ref.Name)
+            if (element.Identifier.Name == @ref.Name)
             {
-                return item;
+                return element;
             }
         }
 
         throw new KeyNotFoundException($"Item '{@ref}' not found.");
     }
-
 }

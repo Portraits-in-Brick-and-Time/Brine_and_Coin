@@ -15,10 +15,10 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="NetAF" Version="3.9.1" />
+    <PackageReference Include="NetAF" Version="3.10.1" />
     <PackageReference Include="SoundFlow" Version="1.3.0" />
     <PackageReference Include="Spectre.Console" Version="0.54.0" />
-    <PackageReference Include="Splat" Version="17.1.1" />
+    <PackageReference Include="Splat" Version="19.1.1" />
     <PackageReference Include="Velopack" Version="0.0.1298" />
   </ItemGroup>
   
@@ -39,12 +39,22 @@
   </PropertyGroup>
   <UsingTask TaskName="AssetCompiler.CompileAssetsTask" AssemblyFile="$(AssetCompilerOutputPath)" />
   
-  <Target Name="CompileGameAssets" AfterTargets="Build">
+  <Target Name="CompileGameAssets" BeforeTargets="PrepareForBuild">
     <ItemGroup>
       <AssetSources Include="Assets\**\*.conf" />
     </ItemGroup>
 
     <MSBuild Projects="..\AssetCompiler\AssetCompiler.csproj" Properties="Configuration=$(Configuration);Platform=$(Platform)" />
-    <CompileAssetsTask Sources="@(AssetSources)" OutputFilename="$(OutputPath)Assets\core_assets.elf" />
+    <CompileAssetsTask Sources="@(AssetSources)" OutputFilename="$(OutputPath)Assets\core_assets.elf">
+      <Output TaskParameter="OutputItem" ItemName="CoreAssets" />
+    </CompileAssetsTask>
+
+    <ItemGroup>
+      <Content Include="@(CoreAssets)">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <TargetPath>Assets\%(Filename)%(Extension)</TargetPath>
+      </Content>
+    </ItemGroup>
   </Target>
 </Project>

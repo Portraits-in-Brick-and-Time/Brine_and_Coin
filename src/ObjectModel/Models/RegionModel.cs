@@ -8,10 +8,10 @@ namespace ObjectModel.Models;
 [MessagePackObject(AllowPrivate = true)]
 internal class RegionModel : GameObjectModel
 {
-    [Key(3)]
+    [Key(4)]
     public Dictionary<NamedRef, Position> Rooms { get; set; }
 
-    [Key(4)]
+    [Key(5)]
     public NamedRef? StartRoom { get; set; }
 
     public RegionModel()

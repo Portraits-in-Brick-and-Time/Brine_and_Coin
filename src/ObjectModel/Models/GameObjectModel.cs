@@ -13,4 +13,7 @@ internal abstract class GameObjectModel
 
     [Key(2)]
     public Dictionary<NamedRef, int> Attributes { get; set; } = [];
+
+    [Key(3)]
+    public List<NamedRef> Commands { get; set; } = [];
 }

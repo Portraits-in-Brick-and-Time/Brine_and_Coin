@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -14,6 +15,9 @@ public class CompileAssetsTask : Task
     [Required]
     public string OutputFilename { get; set; }
 
+    [Output]
+    public ITaskItem[] OutputItem { get; private set; }
+
     public override bool Execute()
     {
         try
@@ -27,13 +31,14 @@ public class CompileAssetsTask : Task
                 objectWriter.WriteObjects(source.ToString());
             }
             objectWriter.Close();
+            OutputItem = [new TaskItem(OutputFilename)];
 
             Log.LogMessage(MessageImportance.Low, "Asset compilation completed successfully.");
             return true;
         }
         catch (Exception ex)
         {
-            Log.LogError($"Asset compilation failed: {ex.Message}");
+            Log.LogError($"Asset compilation failed: {ex}");
             return false;
         }
     }

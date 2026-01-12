@@ -1,0 +1,12 @@
+[
+  {
+    "label": "build",
+    "command": "dotnet",
+    "args": [
+      "build",
+      "-c",
+      "Debug",
+      
+    ],
+  },
+]

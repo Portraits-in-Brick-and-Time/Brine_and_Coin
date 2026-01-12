@@ -14,6 +14,8 @@ internal abstract class CustomSection(ElfFile file)
 
     public abstract string Name { get; }
 
+    protected virtual ElfSymbolType SymbolType { get; } = ElfSymbolType.Object;
+
     /// <summary>
     /// Prepares a new instance of the <see cref="CustomSection"/> class for writing.
     /// </summary>
@@ -25,12 +27,12 @@ internal abstract class CustomSection(ElfFile file)
         Section = new ElfStreamSection(ElfSectionSpecialType.Text, new MemoryStream())
         {
             Name = Name,
-            Flags = ElfSectionFlags.Alloc | ElfSectionFlags.Group | ElfSectionFlags.Compressed
+            Flags = ElfSectionFlags.Alloc | ElfSectionFlags.Group
         };
-        
+
         File.Add(Section);
     }
-    
+
     /// <summary>
     /// Prepares a new instance of the <see cref="CustomSection"/> class for reading
     /// </summary>
@@ -74,7 +76,7 @@ internal abstract class CustomSection(ElfFile file)
                 Bind = ElfSymbolBind.Global,
                 Name = name,
                 Value = index,
-                Type = ElfSymbolType.Object,
+                Type = SymbolType,
                 Size = size,
                 SectionLink = Section
             });
