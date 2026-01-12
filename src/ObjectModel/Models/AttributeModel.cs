@@ -26,6 +26,5 @@ internal class AttributeModel : GameObjectModel
 
     public AttributeModel()
     {
-        
     }
 }

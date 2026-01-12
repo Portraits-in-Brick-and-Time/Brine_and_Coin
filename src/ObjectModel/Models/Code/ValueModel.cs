@@ -13,7 +13,6 @@ internal class ValueModel(string value) : IEvaluable
 
     public ValueModel() : this(null)
     {
-        
     }
 
     public object Evaluate(Evaluator evaluator, Scope scope)
