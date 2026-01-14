@@ -27,7 +27,7 @@ public partial class VelopackTasks : ToolTasks, IRequireNuGetPackage
     /// <summary><p>Velopack creates installers and auto-update packages for cross-platform desktop apps.</p><p>For more details, visit the <a href="https://docs.velopack.io/">official website</a>.</p></summary>
     public static IReadOnlyCollection<Output> Velopack(ArgumentStringHandler arguments, string workingDirectory = null, IReadOnlyDictionary<string, string> environmentVariables = null, int? timeout = null, bool? logOutput = null, bool? logInvocation = null, Action<OutputType, string> logger = null, Func<IProcess, object> exitHandler = null) => new VelopackTasks().Run(arguments, workingDirectory, environmentVariables, timeout, logOutput, logInvocation, logger, exitHandler);
     /// <summary><p>Creates platform release packages (`vpk [windows|linux] pack`).</p><p>For more details, visit the <a href="https://docs.velopack.io/reference/cli">official website</a>.</p></summary>
-    /// <remarks><p>This is a <a href="https://www.nuke.build/docs/common/cli-tools/#fluent-api">CLI wrapper with fluent API</a> that allows to modify the following arguments:</p><ul><li><c>--skip-updates</c> via <see cref="VelopackPackSettings.SkipUpdates"/></li><li><c>--verbose</c> via <see cref="VelopackPackSettings.Verbose"/></li><li><c>-e</c> via <see cref="VelopackPackSettings.MainExe"/></li><li><c>-o</c> via <see cref="VelopackPackSettings.OutputDir"/></li><li><c>-p</c> via <see cref="VelopackPackSettings.PackDir"/></li><li><c>-r</c> via <see cref="VelopackPackSettings.Runtime"/></li><li><c>-u</c> via <see cref="VelopackPackSettings.PackId"/></li><li><c>-v</c> via <see cref="VelopackPackSettings.PackVersion"/></li><li><c>-x</c> via <see cref="VelopackPackSettings.LegacyConsole"/></li><li><c>-y</c> via <see cref="VelopackPackSettings.Yes"/></li><li><c>[</c> via <see cref="VelopackPackSettings.Channel"/></li></ul></remarks>
+    /// <remarks><p>This is a <a href="https://www.nuke.build/docs/common/cli-tools/#fluent-api">CLI wrapper with fluent API</a> that allows to modify the following arguments:</p><ul><li><c>--packTitle</c> via <see cref="VelopackPackSettings.PackTitle"/></li><li><c>--skip-updates</c> via <see cref="VelopackPackSettings.SkipUpdates"/></li><li><c>--verbose</c> via <see cref="VelopackPackSettings.Verbose"/></li><li><c>-e</c> via <see cref="VelopackPackSettings.MainExe"/></li><li><c>-o</c> via <see cref="VelopackPackSettings.OutputDir"/></li><li><c>-p</c> via <see cref="VelopackPackSettings.PackDir"/></li><li><c>-r</c> via <see cref="VelopackPackSettings.Runtime"/></li><li><c>-u</c> via <see cref="VelopackPackSettings.PackId"/></li><li><c>-u</c> via <see cref="VelopackPackSettings.UniqueIdentifier"/></li><li><c>-v</c> via <see cref="VelopackPackSettings.PackVersion"/></li><li><c>-x</c> via <see cref="VelopackPackSettings.LegacyConsole"/></li><li><c>-y</c> via <see cref="VelopackPackSettings.Yes"/></li><li><c>[</c> via <see cref="VelopackPackSettings.Channel"/></li></ul></remarks>
     public static IReadOnlyCollection<Output> VelopackPack(VelopackPackSettings options = null) => new VelopackTasks().Run<VelopackPackSettings>(options);
     /// <inheritdoc cref="VelopackTasks.VelopackPack(.VelopackPackSettings)"/>
     public static IReadOnlyCollection<Output> VelopackPack(Configure<VelopackPackSettings> configurator) => new VelopackTasks().Run<VelopackPackSettings>(configurator.Invoke(new VelopackPackSettings()));
@@ -76,6 +76,10 @@ public partial class VelopackPackSettings : ToolOptions
     [Argument(Format = "-r={value}")] public string Runtime => Get<string>(() => Runtime);
     /// <summary>Main executable name</summary>
     [Argument(Format = "-e={value}")] public string MainExe => Get<string>(() => MainExe);
+    /// <summary>The unique identifier</summary>
+    [Argument(Format = "-u={value}")] public string UniqueIdentifier => Get<string>(() => UniqueIdentifier);
+    /// <summary>The title to use in the shortcut</summary>
+    [Argument(Format = "--packTitle={value}")] public string PackTitle => Get<string>(() => PackTitle);
     /// <summary>Print diagnostic messages</summary>
     [Argument(Format = "--verbose")] public bool? Verbose => Get<bool?>(() => Verbose);
     /// <summary>Auto-confirm prompts</summary>
@@ -226,6 +230,22 @@ public static partial class VelopackPackSettingsExtensions
     /// <inheritdoc cref="VelopackPackSettings.MainExe"/>
     [Pure] [Builder(Type = typeof(VelopackPackSettings), Property = nameof(VelopackPackSettings.MainExe))]
     public static T ResetMainExe<T>(this T o) where T : VelopackPackSettings => o.Modify(b => b.Remove(() => o.MainExe));
+    #endregion
+    #region UniqueIdentifier
+    /// <inheritdoc cref="VelopackPackSettings.UniqueIdentifier"/>
+    [Pure] [Builder(Type = typeof(VelopackPackSettings), Property = nameof(VelopackPackSettings.UniqueIdentifier))]
+    public static T SetUniqueIdentifier<T>(this T o, string v) where T : VelopackPackSettings => o.Modify(b => b.Set(() => o.UniqueIdentifier, v));
+    /// <inheritdoc cref="VelopackPackSettings.UniqueIdentifier"/>
+    [Pure] [Builder(Type = typeof(VelopackPackSettings), Property = nameof(VelopackPackSettings.UniqueIdentifier))]
+    public static T ResetUniqueIdentifier<T>(this T o) where T : VelopackPackSettings => o.Modify(b => b.Remove(() => o.UniqueIdentifier));
+    #endregion
+    #region PackTitle
+    /// <inheritdoc cref="VelopackPackSettings.PackTitle"/>
+    [Pure] [Builder(Type = typeof(VelopackPackSettings), Property = nameof(VelopackPackSettings.PackTitle))]
+    public static T SetPackTitle<T>(this T o, string v) where T : VelopackPackSettings => o.Modify(b => b.Set(() => o.PackTitle, v));
+    /// <inheritdoc cref="VelopackPackSettings.PackTitle"/>
+    [Pure] [Builder(Type = typeof(VelopackPackSettings), Property = nameof(VelopackPackSettings.PackTitle))]
+    public static T ResetPackTitle<T>(this T o) where T : VelopackPackSettings => o.Modify(b => b.Remove(() => o.PackTitle));
     #endregion
     #region Verbose
     /// <inheritdoc cref="VelopackPackSettings.Verbose"/>

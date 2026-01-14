@@ -29,10 +29,8 @@
         "Clean",
         "Deploy",
         "DownloadOldRelease",
-        "PublishLinux",
-        "PublishWindows",
-        "VelopackPackLinux",
-        "VelopackPackWindows"
+        "Publish",
+        "VelopackPack"
       ]
     },
     "Verbosity": {

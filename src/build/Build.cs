@@ -90,37 +90,32 @@ class BuildFile : NukeBuild, IHazGitVersion, IHazConfiguration
                 .SetConfiguration(((IHazConfiguration)this).Configuration));
         });
 
-    Target PublishWindows => _ => _
+    Target Publish => _ => _
         .DependsOn(Build)
         //.OnlyWhenStatic(() => Configuration == Configuration.Release)
         .Executes(() =>
         {
-            var filename = Solution.Shell.BrineAndCoin.Path;
-            DotNetPublish(s => s
-                .SetProject(filename)
-                .SetConfiguration(((IHazConfiguration)this).Configuration)
-                .SetRuntime("win-x64")
-                .SetSelfContained(true)
-                .SetOutput(PublishWinDir));
-        });
+            List<(string rid, string publishDir)> info = [
+                ("win-x64", PublishWinDir),
+                ("linux-x64", PublishLinuxDir)
+            ];
 
-    Target PublishLinux => _ => _
-        .DependsOn(Build)
-        .ProceedAfterFailure()
-        //.OnlyWhenStatic(() => Configuration == Configuration.Release)
-        .Executes(() =>
-        {
             var filename = Solution.Shell.BrineAndCoin.Path;
             DotNetPublish(s => s
                 .SetProject(filename)
                 .SetConfiguration(((IHazConfiguration)this).Configuration)
-                .SetRuntime("linux-x64")
                 .SetSelfContained(true)
-                .SetOutput(PublishLinuxDir));
+                .CombineWith(info, (settings, i) =>
+                {
+                    settings.SetRuntime(i.rid);
+                    settings.SetOutput(i.publishDir);
+
+                    return settings;
+                }));
         });
 
     Target DownloadOldRelease => _ => _
-        .DependsOn(PublishLinux, PublishWindows)
+        .DependsOn(Publish)
         //.OnlyWhenStatic(() => Configuration == Configuration.Release)
         .Executes(() =>
         {
@@ -132,31 +127,40 @@ class BuildFile : NukeBuild, IHazGitVersion, IHazConfiguration
                 .CombineWith(["windows", "linux"], (settings, channel) =>
                 {
                     settings.SetChannel(channel);
+
                     return settings;
                 }), 2, true
             );
         });
 
-    Target VelopackPackWindows => _ => _
+    Target VelopackPack => _ => _
         .DependsOn(DownloadOldRelease)
         .Executes(() =>
         {
-            ProcessTasks.StartProcess("vpk",
-                $"pack -u \"{UniqueIdentifier}\" -v {((IHazGitVersion)this).Versioning.LegacySemVer} -p {PublishWinDir} --mainExe {ExeName}.exe --packTitle \"Brine and Coin\"",
-                logOutput: true).AssertZeroExitCode();
-        });
+            List<(string channel, string publishDir, string exeName)> info = [
+                ("windows", PublishWinDir, $"{ExeName}.exe"),
+                ("linux", PublishLinuxDir, ExeName)
+            ];
 
-    Target VelopackPackLinux => _ => _
-        .DependsOn(DownloadOldRelease)
-        .Executes(() =>
-        {
-            ProcessTasks.StartProcess("vpk",
-                $"[linux] pack -u \"{UniqueIdentifier}\" -v {((IHazGitVersion)this).Versioning.LegacySemVer} -p {PublishLinuxDir} --mainExe {ExeName} --packTitle \"Brine and Coin\"",
-                logOutput: true).AssertZeroExitCode();
+            VelopackTasks.VelopackPack(_ =>
+            {
+                _.SetPackVersion(((IHazGitVersion)this).Versioning.LegacySemVer);
+                _.SetUniqueIdentifier(UniqueIdentifier);
+                _.SetPackTitle("Brine and Coin");
+
+                return _.CombineWith(info, (settings, i) =>
+                {
+                    settings.SetChannel(i.channel);
+                    settings.SetPackDir(i.publishDir);
+                    settings.SetMainExe(i.exeName);
+
+                    return settings;
+                });
+            }, 2);
         });
 
     Target Deploy => _ => _
-        .DependsOn(VelopackPackWindows, VelopackPackLinux)
+        .DependsOn(VelopackPack)
         .Executes(() =>
         {
             // Windows channel

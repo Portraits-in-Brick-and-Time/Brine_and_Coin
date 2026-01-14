@@ -58,6 +58,18 @@
             "type": "string",
             "format": "-e={value}",
             "help": "Main executable name"
+          },
+          {
+            "name": "UniqueIdentifier",
+            "type": "string",
+            "format": "-u={value}",
+            "help": "The unique identifier"
+          },
+          {
+            "name": "PackTitle",
+            "type": "string",
+            "format": "--packTitle={value}",
+            "help": "The title to use in the shortcut"
           }
         ]
       }
