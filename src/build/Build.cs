@@ -22,7 +22,7 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
     PublishArtifacts = false,
     EnableGitHubToken = true,
     InvokedTargets = new[] { nameof(DeployToGitHubReleases) })]
-class BuildFile : NukeBuild
+class BuildFile : NukeBuild, IHazGitVersion, IHazConfiguration
 {
     public static int Main() => Execute<BuildFile>(x => x.DeployToGitHubReleases);
 
@@ -31,17 +31,11 @@ class BuildFile : NukeBuild
     [Solution(GenerateProjects = true)]
     readonly Solution Solution;
 
-    [GitVersion]
-    GitVersion Version;
-
     AbsolutePath PublishWinDir => RootDirectory / "publish-win";
     AbsolutePath PublishLinuxDir => RootDirectory / "publish-linux";
 
     const string UniqueIdentifier = "Brine_and_Coin";
     const string ExeName = "Portraits_in_Brick_and_Time_-_Brine_And_Coin";
-
-    [Parameter]
-    readonly Configuration Configuration = IsServerBuild ? Configuration.Release : Configuration.Debug;
 
     Target Clean => _ => _
         .Executes(() =>
