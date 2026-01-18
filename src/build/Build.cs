@@ -2,10 +2,12 @@ using System.Collections.Generic;
 using System.IO;
 using Nuke.Common;
 using Nuke.Common.CI.GitHubActions;
+using Nuke.Common.CI.GitHubActions.Configuration;
 using Nuke.Common.IO;
 using Nuke.Common.ProjectModel;
 using Nuke.Common.Tooling;
 using Nuke.Common.Tools.DotNet;
+using Nuke.Common.Tools.GitHub;
 using Nuke.Common.Tools.GitVersion;
 using Nuke.Common.Utilities;
 using Nuke.Components;
@@ -128,6 +130,7 @@ class BuildFile : NukeBuild, IHazGitVersion, IHazConfiguration
     Target VelopackPack => _ => _
         .DependsOn(DownloadOldRelease)
         .OnlyWhenStatic(() => IsServerBuild)
+        .Produces(ExeName + ".*")
         .Executes(() =>
         {
             List<(string channel, string publishDir, string exeName)> info = [
