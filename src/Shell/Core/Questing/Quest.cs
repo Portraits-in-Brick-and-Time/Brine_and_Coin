@@ -7,7 +7,7 @@ public class Quest(string name, IEnumerable<IQuestStep> steps)
     public string Name { get; } = name;
     public QuestState State { get; private set; } = QuestState.Inactive;
 
-    private readonly List<IQuestStep> _steps = steps.ToList();
+    private readonly List<IQuestStep> _steps = [.. steps];
     private int _currentStepIndex = 0;
 
     public void Start()
