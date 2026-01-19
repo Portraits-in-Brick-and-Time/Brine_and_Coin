@@ -21,7 +21,7 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
     OnPushBranches = new[] { "release" },
     AutoGenerate = true,
     FetchDepth = 0,
-    PublishArtifacts = false,
+    PublishArtifacts = true,
     EnableGitHubToken = true,
     InvokedTargets = new[] { nameof(Deploy) })]
 class BuildFile : NukeBuild, IHazGitVersion, IHazConfiguration
@@ -130,7 +130,7 @@ class BuildFile : NukeBuild, IHazGitVersion, IHazConfiguration
     Target VelopackPack => _ => _
         .DependsOn(DownloadOldRelease)
         .OnlyWhenStatic(() => IsServerBuild)
-        .Produces(ExeName + ".*")
+        .Produces($"{ExeName}.exe", $"{ExeName}.appimage")
         .Executes(() =>
         {
             List<(string channel, string publishDir, string exeName)> info = [
