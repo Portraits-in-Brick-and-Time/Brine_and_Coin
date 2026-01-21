@@ -58,7 +58,6 @@ public class BrineAndCoinGame
         Locator.CurrentMutable.RegisterConstant(playbackDevice);
         Locator.CurrentMutable.RegisterConstant(writer);
 
-        Locator.CurrentMutable.RegisterConstant(new QuestManager());
         Locator.CurrentMutable.RegisterConstant(new Evaluator());
     }
 
@@ -114,6 +113,7 @@ public class BrineAndCoinGame
 
                             clock.Init(DateTime.Now);
                             Locator.CurrentMutable.RegisterConstant(clock);
+                            Locator.CurrentMutable.RegisterConstant(new QuestManager());
 
                             configure?.Invoke(game);
                         });

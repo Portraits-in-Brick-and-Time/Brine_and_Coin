@@ -1,6 +1,7 @@
 using BrineAndCoin.Questing;
 using NetAF.Logging.Events;
 using NetAF.Logic;
+using Splat;
 
 namespace BrineAndCoin.Core.Questing;
 
@@ -11,7 +12,11 @@ public class QuestManager
 
     public QuestManager()
     {
-        ActivateQuest(GameExecutor.ExecutingGame.VariableManager.Get("activeQuest"));
+        var game = Locator.Current.GetService<Game>()!;
+        if (game.VariableManager.ContainsVariable("activeQuest"))
+        {
+            ActivateQuest(game.VariableManager.Get("activeQuest"));
+        }
 
         EventBus.Subscribe<RoomEntered>(OnEvent);
         EventBus.Subscribe<RoomExited>(OnEvent);
