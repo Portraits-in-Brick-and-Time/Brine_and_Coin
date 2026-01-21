@@ -1,4 +1,5 @@
 using BrineAndCoin.Core;
+using BrineAndCoin.Core.Questing;
 using BrineAndCoin.Questing;
 using BrineAndCoin.Questing.Steps;
 using NetAF.Commands.Persistence;
@@ -24,22 +25,7 @@ public class BrineAndCoinGame
 
     private BrineAndCoinGame()
     {
-        var quest = new Quest(
-    "find_the_forest",
-    [
-        new GoToRoomStep("village"),
-        new GoToRoomStep("forest")
-    ]);
 
-        quest.Start();
-
-        EventBus.Subscribe<RoomEntered>(quest.OnEvent);
-        EventBus.Subscribe<RoomExited>(quest.OnEvent);
-        EventBus.Subscribe<RegionEntered>(quest.OnEvent);
-        EventBus.Subscribe<RegionExited>(quest.OnEvent);
-        EventBus.Subscribe<ItemUsed>(quest.OnEvent);
-        EventBus.Subscribe<ItemReceived>(quest.OnEvent);
-        EventBus.Subscribe<ItemRemoved>(quest.OnEvent);
     }
 
     public static BrineAndCoinGame NewGame()
@@ -72,6 +58,7 @@ public class BrineAndCoinGame
         Locator.CurrentMutable.RegisterConstant(playbackDevice);
         Locator.CurrentMutable.RegisterConstant(writer);
 
+        Locator.CurrentMutable.RegisterConstant(new QuestManager());
         Locator.CurrentMutable.RegisterConstant(new Evaluator());
     }
 
