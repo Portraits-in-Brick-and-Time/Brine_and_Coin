@@ -2,9 +2,10 @@ using NetAF.Logging.Events;
 
 namespace BrineAndCoin.Questing;
 
-public class Quest(string name, IEnumerable<IQuestStep> steps)
+public class Quest(string name, string description, IEnumerable<IQuestStep> steps)
 {
     public string Name { get; } = name;
+    public string Description { get; } = description;
     public QuestState State { get; private set; } = QuestState.Inactive;
 
     private readonly List<IQuestStep> _steps = [.. steps];

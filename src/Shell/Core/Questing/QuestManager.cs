@@ -1,4 +1,5 @@
 using BrineAndCoin.Questing;
+using NetAF.Commands;
 using NetAF.Logging.Events;
 using NetAF.Logic;
 using Splat;
@@ -10,7 +11,7 @@ public class QuestManager
     readonly Dictionary<string, Quest> _quests = [];
     private Quest? activeQuest;
 
-    public QuestManager()
+    public void Init()
     {
         var game = Locator.Current.GetService<Game>()!;
         if (game.VariableManager.ContainsVariable("activeQuest"))
@@ -58,5 +59,19 @@ public class QuestManager
     void OnEvent(BaseEvent gameEvent)
     {
         activeQuest?.OnEvent(gameEvent);
+    }
+
+    public CustomCommand CreateCommand()
+    {
+        return new(new CommandHelp("Quest", "What is your current task?"), true, false, (game, parameters) =>
+        {
+            var message = "You have no active quest.";
+            if (activeQuest != null)
+            {
+                message = $"{activeQuest.Name}\n{activeQuest.Description}";
+            }
+
+            return new Reaction(ReactionResult.Inform, message);
+        });
     }
 }

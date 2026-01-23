@@ -82,8 +82,10 @@ public class BrineAndCoinGame
         RegisterServices();
 
         var clock = new Clock();
+        var questManager = new QuestManager();
         // Commands have to be added before the asset file is being loaded
         CommandStore.Add("clock.show", clock.CreateCommand());
+        CommandStore.Add("quest.show", questManager.CreateCommand());
 
         var world = GameAssetLoader.LoadFile(out var players);
 
@@ -112,8 +114,8 @@ public class BrineAndCoinGame
                             Locator.CurrentMutable.RegisterConstant(game);
 
                             clock.Init(DateTime.Now);
+                            questManager.Init();
                             Locator.CurrentMutable.RegisterConstant(clock);
-                            Locator.CurrentMutable.RegisterConstant(new QuestManager());
 
                             configure?.Invoke(game);
                         });

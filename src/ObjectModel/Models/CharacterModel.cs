@@ -21,4 +21,5 @@ internal class CharacterModel : GameObjectModel, IItemModel
 
     [Key(5)]
     public List<NamedRef> Items { get; set; } = [];
+
 }
