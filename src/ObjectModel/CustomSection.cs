@@ -1,20 +1,51 @@
 using System.IO;
 using System.Linq;
 using LibObjectFile.Elf;
+using MessagePack;
 
 namespace ObjectModel;
 
-internal abstract class CustomSection(ElfFile file)
+internal abstract class CustomSection
 {
     protected ElfStreamSection Section;
-    protected ElfFile File = file;
+    protected ElfFile File => file;
     private ElfSymbolTable _symbolTable;
 
     protected CustomSections CustomSections;
 
+    protected static MessagePackSerializerOptions serializationOptions = MessagePackSerializerOptions.Standard;
+    private readonly ElfFile file;
+
+    public CustomSection(ElfFile file)
+    {
+        this.file = file;
+        IsCompressed = true;
+    }
+
     public abstract string Name { get; }
 
     protected virtual ElfSymbolType SymbolType { get; } = ElfSymbolType.Object;
+
+    public bool IsCompressed
+    {
+        get
+        {
+            return Section.Flags.HasFlag(ElfSectionFlags.Compressed);
+        }
+        set
+        {
+            if (value)
+            {
+                Section.Flags |= ElfSectionFlags.Compressed;
+                serializationOptions = serializationOptions.WithCompression(MessagePackCompression.Lz4Block);
+            }
+            else
+            {
+                Section.Flags &= ~ElfSectionFlags.Compressed; 
+                serializationOptions = serializationOptions.WithCompression(MessagePackCompression.None);
+            }
+        }
+    }
 
     /// <summary>
     /// Prepares a new instance of the <see cref="CustomSection"/> class for writing.
