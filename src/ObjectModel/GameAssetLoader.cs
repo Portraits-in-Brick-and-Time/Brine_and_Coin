@@ -10,6 +10,7 @@ using NetAF.Commands.Persistence;
 using ObjectModel.Evaluation;
 using ObjectModel.IO;
 using ObjectModel.Models;
+using ObjectModel.Referencing;
 using Splat;
 
 namespace ObjectModel;
@@ -251,13 +252,13 @@ public class GameAssetLoader
         var cmds = new List<CustomCommand>();
         foreach (var @ref in model.Commands)
         {
-            if (CommandStore.TryGet(@ref.Name, out var cmd))
+            if (CommandStore.TryGet(@ref, out var cmd))
             {
                 cmds.Add(cmd);
             }
             else
             {
-                throw new KeyNotFoundException($"Command '{@ref.Name}' not found.");
+                throw new KeyNotFoundException($"Command '{@ref}' not found.");
             }
         }
 

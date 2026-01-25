@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using MessagePack;
+using ObjectModel.Referencing;
 
 namespace ObjectModel.Models;
 

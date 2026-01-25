@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using MessagePack;
+using ObjectModel.Referencing;
 
 namespace ObjectModel.Models;
 
@@ -15,5 +16,5 @@ internal abstract class GameObjectModel
     public Dictionary<ModelRef, int> Attributes { get; set; } = [];
 
     [Key(3)]
-    public List<ModelRef> Commands { get; set; } = [];
+    public List<string> Commands { get; set; } = [];
 }

@@ -7,10 +7,13 @@ using System.IO;
 using System.Linq;
 using Hocon;
 using LibObjectFile.Elf;
+using MessagePack;
+using MessagePack.Resolvers;
 using NetAF.Assets.Locations;
 using ObjectModel.Evaluation;
 using ObjectModel.Models;
 using ObjectModel.Models.Code;
+using ObjectModel.Referencing;
 
 public class GameAssetWriter : IDisposable
 {
@@ -37,15 +40,27 @@ public class GameAssetWriter : IDisposable
         _definitionWriters["rooms"] = WriteRoom;
         _definitionWriters["regions"] = WriteRegion;
         _definitionWriters["quests"] = WriteQuest;
+
+        ModelRefFormatter.Instance.SymbolTable = _symbolTable;
+        var resolver = CompositeResolver.Create(
+                    new ModelRefResolver(),
+                    StandardResolver.Instance
+                );
+
+        MessagePackSerializer.DefaultOptions = MessagePackSerializer.DefaultOptions.WithResolver(
+            resolver
+        );
     }
 
     private void WriteQuest(string name, HoconObject obj)
     {
         var description = obj.ContainsKey("description") ? obj.GetField("description").GetString() : string.Empty;
 
-        var model = new Models.Quest.QuestModel();
-        model.Name = name;
-        model.Description = description;
+        var model = new Models.Quest.QuestModel
+        {
+            Name = name,
+            Description = description
+        };
 
         if (obj.ContainsKey("steps"))
         {
@@ -152,7 +167,7 @@ public class GameAssetWriter : IDisposable
 
         foreach (var (attrName, attrValue) in obj.GetField("attributes").GetObject().AsEnumerable())
         {
-            model.Attributes.Add(new ModelRef(attrName), int.Parse(attrValue.GetString()));
+            model.Attributes.Add(attrName, int.Parse(attrValue.GetString()));
         }
     }
 
