@@ -228,7 +228,10 @@ public class GameAssetWriter : IDisposable
     {
         var description = obj.GetField("description").GetString();
 
-        var model = new ItemModel(name, description);
+        var model = new ItemModel(name, description)
+        {
+            IsPlayerVisible = GetOptionalFieldValue<bool>(obj, "visible")
+        };
 
         ApplyAttributes(obj, model);
         ApplyCommands(obj, model);

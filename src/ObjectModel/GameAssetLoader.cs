@@ -135,7 +135,11 @@ public class GameAssetLoader
     {
         foreach (var itemModel in customSections.ItemsSection.Elements)
         {
-            var item = new Item(itemModel.Name, itemModel.Description, commands: GetCommands(itemModel));
+            var item = new Item(itemModel.Name, itemModel.Description, commands: GetCommands(itemModel))
+            {
+                IsPlayerVisible = itemModel.IsPlayerVisible
+            };
+
             ApplyAttributes(item, itemModel);
             _items.Add(item);
         }
