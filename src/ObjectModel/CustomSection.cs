@@ -55,9 +55,9 @@ internal abstract class CustomSection
         Section = new ElfStreamSection(ElfSectionSpecialType.Text, new MemoryStream())
         {
             Name = Name,
-            Flags = ElfSectionFlags.Alloc | ElfSectionFlags.Group
+            Flags = ElfSectionFlags.Alloc
         };
-        IsCompressed = true;
+        IsCompressed = false;
 
         File.Add(Section);
     }

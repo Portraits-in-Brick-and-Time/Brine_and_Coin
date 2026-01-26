@@ -19,7 +19,7 @@ internal class CustomSections
 
     public QuestsSection QuestsSection { get; }
 
-    private CustomSection[] _allSections;
+    private readonly CustomSection[] _allSections;
 
     public CustomSections(ElfFile file)
     {
