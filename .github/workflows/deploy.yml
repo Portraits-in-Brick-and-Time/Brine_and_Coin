@@ -40,3 +40,13 @@ jobs:
         run: ./build.cmd Deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: 'Publish: Portraits_in_Brick_and_Time_-_Brine_And_Coin.exe'
+        uses: actions/upload-artifact@v5
+        with:
+          name: Portraits_in_Brick_and_Time_-_Brine_And_Coin.exe
+          path: publish-win/Portraits_in_Brick_and_Time_-_Brine_And_Coin.exe
+      - name: 'Publish: Portraits_in_Brick_and_Time_-_Brine_And_Coin.appimage'
+        uses: actions/upload-artifact@v5
+        with:
+          name: Portraits_in_Brick_and_Time_-_Brine_And_Coin.appimage
+          path: publish-linux/Portraits_in_Brick_and_Time_-_Brine_And_Coin.appimage
