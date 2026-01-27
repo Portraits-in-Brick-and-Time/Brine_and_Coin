@@ -141,7 +141,15 @@ class BuildFile : NukeBuild, IHazGitVersion, IHazConfiguration
             foreach (var i in info)
             {
                 string legacySemVer = ((IHazGitVersion)this).Versioning.MajorMinorPatch;
-                Velopack($"[{i.channel}] pack --packVersion {legacySemVer} -u {UniqueIdentifier} --packTitle \"Brine and Coin\" -p {i.publishDir} --mainExe {i.exeName}");
+                var mainExePath = (AbsolutePath)i.publishDir / i.exeName;
+
+                Velopack(
+                    $"[{i.channel}] pack " +
+                    $"--packVersion {legacySemVer} " +
+                    $"-u {UniqueIdentifier} " +
+                    $"--packTitle \"Brine and Coin\" " +
+                    $"-p {i.publishDir} " +
+                    $"--mainExe {mainExePath}");
             }
         });
 
