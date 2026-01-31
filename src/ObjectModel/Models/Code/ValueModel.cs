@@ -6,10 +6,10 @@ using ObjectModel.Evaluation;
 namespace ObjectModel.Models.Code;
 
 [MessagePackObject(AllowPrivate = true)]
-internal class ValueModel(string value) : IEvaluable
+internal class ValueModel(object value) : IEvaluable
 {
     [Key(0)]
-    public string Value { get; set; } = value;
+    public object Value { get; set; } = value;
 
     public ValueModel() : this(null)
     {
@@ -22,6 +22,21 @@ internal class ValueModel(string value) : IEvaluable
 
     public static IEvaluable FromObject(KeyValuePair<string, HoconField> rootObj)
     {
-        return new ValueModel() { Value = rootObj.Value.GetString() };
+        object value = null;
+
+        if (rootObj.Value.Type == HoconType.String)
+        {
+            value = rootObj.Value.GetString();
+        }
+        else if (rootObj.Value.Type == HoconType.Number)
+        {
+            value = rootObj.Value.GetNumber();
+        }
+        else if (rootObj.Value.Type == HoconType.Boolean)
+        {
+            value = rootObj.Value.GetBoolean();
+        }
+
+        return new ValueModel() { Value = value };
     }
 }

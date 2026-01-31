@@ -40,7 +40,7 @@ internal class CallFuncModel(string name, Dictionary<string, IEvaluable> paramet
         var paramArray = rootObj.Value.GetObject();
         foreach (var param in paramArray)
         {
-            paramList.Add(param.Key, new ValueModel(param.Value.GetString()));
+            paramList.Add(param.Key, ValueModel.FromObject(param));
         }
 
         return new CallFuncModel(funcName, paramList);

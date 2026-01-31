@@ -325,7 +325,7 @@ public class GameAssetWriter : IDisposable
 
         if (obj.TryGetValue("startRoom", out HoconField value))
         {
-            model.StartRoom = new(value.GetString());
+            model.StartRoom = value.GetString();
         }
 
         ApplyAttributes(obj, model);
