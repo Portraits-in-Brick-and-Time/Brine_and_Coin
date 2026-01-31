@@ -138,14 +138,31 @@ public class GameAssetLoader
     {
         foreach (var itemModel in customSections.ItemsSection.Elements)
         {
-            var item = new Item(itemModel.Name, itemModel.Description, commands: GetCommands(itemModel))
+            var item = new Item(itemModel.Name, itemModel.Description, commands: GetCommands(itemModel),
+                interaction: GetInteraction(itemModel.OnInteraction))
             {
                 IsPlayerVisible = itemModel.IsPlayerVisible
             };
 
             ApplyAttributes(item, itemModel);
+            
             _items.Add(item);
         }
+    }
+
+    private InteractionCallback GetInteraction(List<IEvaluable> onInteraction)
+    {
+        if (onInteraction.Count == 0)
+        {
+            return null;
+        }
+
+        return new(item =>
+        {
+            var interaction = EvaluateCode<Interaction>(onInteraction);
+
+            return new Interaction(interaction.Result, item, interaction.Description);
+        });
     }
 
     private void LoadRegions()
@@ -210,9 +227,22 @@ public class GameAssetLoader
         return new(transition =>
         {
             Evaluator evaluator = Locator.Current.GetService<Evaluator>();
-            var reaction = evaluator.Evaluate<Reaction>(code, evaluator.RootScope);
-            return new(reaction, true);
+            var scope = evaluator.RootScope.NewSubScope();
+            //Todo: add transition to scope when mutliple value types supported
+            //scope.AddOrSet("transition", transition);
+            return new(EvaluateCode<Reaction>(code, scope), true);
         });
+    }
+
+    private object EvaluateCode(List<IEvaluable> code, Scope scope = null)
+    {
+        Evaluator evaluator = Locator.Current.GetService<Evaluator>();
+        return evaluator.Evaluate(code, scope ?? evaluator.RootScope);
+    }
+
+    private T EvaluateCode<T>(List<IEvaluable> code, Scope scope = null)
+    {
+        return (T)EvaluateCode(code, scope ?? Locator.Current.GetService<Evaluator>().RootScope);
     }
 
     private void AddNpcs(Room target, RoomModel model)
