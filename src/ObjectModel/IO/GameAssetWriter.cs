@@ -290,21 +290,13 @@ public class GameAssetWriter : IDisposable
 
         foreach (var c in value.GetObject())
         {
-            switch (c.Key)
+            if (c.Value.Type == HoconType.Object)
             {
-                case "reaction":
-                    code.Add(ReactionModel.FromObject(c));
-                    break;
-                default:
-                    if (c.Value.Type == HoconType.Object)
-                    {
-                        code.Add(CallFuncModel.FromObject(c));
-                    }
-                    else
-                    {
-                        code.Add(VariableDefinitonModel.FromObject(c));
-                    }
-                    break;
+                code.Add(CallFuncModel.FromObject(c));
+            }
+            else
+            {
+                code.Add(VariableDefinitonModel.FromObject(c));
             }
         }
     }
@@ -325,7 +317,7 @@ public class GameAssetWriter : IDisposable
 
         if (obj.TryGetValue("startRoom", out HoconField value))
         {
-            model.StartRoom = new(value.GetString());
+            model.StartRoom = value.GetString();
         }
 
         ApplyAttributes(obj, model);
