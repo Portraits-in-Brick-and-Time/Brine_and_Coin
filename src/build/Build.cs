@@ -19,9 +19,9 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
     "deploy",
     GitHubActionsImage.WindowsLatest,
     OnPushBranches = new[] { "release" },
-    AutoGenerate = true,
+    AutoGenerate = false,
     FetchDepth = 0,
-    PublishArtifacts = false,
+    PublishArtifacts = true,
     EnableGitHubToken = true,
     InvokedTargets = new[] { nameof(Deploy) })]
 class BuildFile : NukeBuild, IHazGitVersion, IHazConfiguration
@@ -59,17 +59,19 @@ class BuildFile : NukeBuild, IHazGitVersion, IHazConfiguration
         .ProceedAfterFailure()
         .Executes(() =>
         {
-            if (!Directory.Exists("Assets"))
+            AbsolutePath assetsDir = Solution.Shell.BrineAndCoin.Directory / "Assets";
+            if (!Directory.Exists(assetsDir))
             {
-                Directory.CreateDirectory("Assets");
+                Directory.CreateDirectory(assetsDir);
             }
 
-            if (!File.Exists(AssetsFilename))
+            AbsolutePath assetPath = assetsDir / AssetsFilename;
+            if (!File.Exists(assetPath))
             {
-                File.Create(AssetsFilename).Close();
+                File.Create(assetPath).Close();
             }
 
-            using var elf = File.Create(Solution.Shell.BrineAndCoin.Directory / "Assets" / AssetsFilename);
+            using var elf = File.Create(assetPath);
             var objectWriter = new GameAssetWriter(elf);
             var sources = Solution.Shell.BrineAndCoin.GetItems("AssetSources");
             foreach (var source in sources)
@@ -130,7 +132,7 @@ class BuildFile : NukeBuild, IHazGitVersion, IHazConfiguration
     Target VelopackPack => _ => _
         .DependsOn(DownloadOldRelease)
         .OnlyWhenStatic(() => IsServerBuild)
-        .Produces(ExeName + ".*")
+        .Produces($"{PublishWinDir / ExeName}.exe", $"{PublishLinuxDir / ExeName}.appimage")
         .Executes(() =>
         {
             List<(string channel, string publishDir, string exeName)> info = [
@@ -141,7 +143,15 @@ class BuildFile : NukeBuild, IHazGitVersion, IHazConfiguration
             foreach (var i in info)
             {
                 string legacySemVer = ((IHazGitVersion)this).Versioning.MajorMinorPatch;
-                Velopack($"[{i.channel}] pack --packVersion {legacySemVer} -u {UniqueIdentifier} --packTitle \"Brine and Coin\" -p {i.publishDir} --mainExe {i.exeName}");
+                var mainExePath = (AbsolutePath)i.publishDir / i.exeName;
+
+                Velopack(
+                    $"[{i.channel}] pack " +
+                    $"--packVersion {legacySemVer} " +
+                    $"-u {UniqueIdentifier} " +
+                    $"--packTitle \"Brine and Coin\" " +
+                    $"-p {i.publishDir} " +
+                    $"--mainExe {mainExePath}");
             }
         });
 
@@ -158,6 +168,5 @@ class BuildFile : NukeBuild, IHazGitVersion, IHazConfiguration
                 Velopack($"upload github --channel {channel} --repoUrl https://github.com/{repository} --token {GitHubToken} --releaseName \"{version}\" --tag v{version} --publish --merge");
             }
         });
-
 }
 

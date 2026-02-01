@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using MessagePack;
+using ObjectModel.Referencing;
 
 namespace ObjectModel.Models;
 
@@ -20,5 +21,5 @@ internal class CharacterModel : GameObjectModel, IItemModel
     public bool IsNPC { get; set; }
 
     [Key(5)]
-    public List<NamedRef> Items { get; set; } = [];
+    public List<ModelRef> Items { get; set; } = [];
 }

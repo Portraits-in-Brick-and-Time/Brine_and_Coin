@@ -7,9 +7,12 @@ using NetAF.Assets.Characters;
 using NetAF.Assets.Locations;
 using NetAF.Commands;
 using NetAF.Commands.Persistence;
+using NetAF.Conversations;
+using NetAF.Conversations.Instructions;
 using ObjectModel.Evaluation;
 using ObjectModel.IO;
 using ObjectModel.Models;
+using ObjectModel.Referencing;
 using Splat;
 
 namespace ObjectModel;
@@ -63,7 +66,8 @@ public class GameAssetLoader
         var worldName = customSections.MetaSection.Properties["world.name"];
         var worldDescription = customSections.MetaSection.Properties["world.description"];
 
-        var overworld = new Overworld(worldName.ToString(), worldDescription.ToString());
+        var overworld = new Overworld(worldName.ToString(), worldDescription.ToString(),
+            commands: CreatePersistentCommands());
 
         foreach (var region in customSections.RegionsSection.Elements)
         {
@@ -73,7 +77,7 @@ public class GameAssetLoader
         return overworld;
     }
 
-    private CustomCommand[] CreatePersistentCommands()
+    public static (string folder, string path) GetSaveFileName()
     {
         var folder = Path.Combine(
             System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData),
@@ -82,6 +86,13 @@ public class GameAssetLoader
             folder,
             "savegame.json"
         );
+
+        return (folder, path);
+    }
+
+    private CustomCommand[] CreatePersistentCommands()
+    {
+        var (folder, path) = GetSaveFileName();
 
         if (!Directory.Exists(folder))
         {
@@ -127,10 +138,31 @@ public class GameAssetLoader
     {
         foreach (var itemModel in customSections.ItemsSection.Elements)
         {
-            var item = new Item(itemModel.Name, itemModel.Description, commands: GetCommands(itemModel));
+            var item = new Item(itemModel.Name, itemModel.Description, commands: GetCommands(itemModel),
+                interaction: GetInteraction(itemModel.OnInteraction))
+            {
+                IsPlayerVisible = itemModel.IsPlayerVisible
+            };
+
             ApplyAttributes(item, itemModel);
+            
             _items.Add(item);
         }
+    }
+
+    private InteractionCallback GetInteraction(List<IEvaluable> onInteraction)
+    {
+        if (onInteraction.Count == 0)
+        {
+            return null;
+        }
+
+        return new(item =>
+        {
+            var interaction = EvaluateCode<Interaction>(onInteraction);
+
+            return new Interaction(interaction.Result, item, interaction.Description);
+        });
     }
 
     private void LoadRegions()
@@ -174,7 +206,7 @@ public class GameAssetLoader
     private Exit[] GetExits(RoomModel model)
     {
         var exits = new List<Exit>();
-        
+
         foreach (var exitModel in model.Exits)
         {
             var exit = new Exit(exitModel.Direction, exitModel.IsLocked, new(exitModel.Name),
@@ -191,13 +223,26 @@ public class GameAssetLoader
         {
             return null;
         }
-        
+
         return new(transition =>
         {
             Evaluator evaluator = Locator.Current.GetService<Evaluator>();
-            var reaction = evaluator.Evaluate<Reaction>(code, evaluator.RootScope);
-            return new(reaction, true);
+            var scope = evaluator.RootScope.NewSubScope();
+            //Todo: add transition to scope when mutliple value types supported
+            //scope.AddOrSet("transition", transition);
+            return new(EvaluateCode<Reaction>(code, scope), true);
         });
+    }
+
+    private object EvaluateCode(List<IEvaluable> code, Scope scope = null)
+    {
+        Evaluator evaluator = Locator.Current.GetService<Evaluator>();
+        return evaluator.Evaluate(code, scope ?? evaluator.RootScope);
+    }
+
+    private T EvaluateCode<T>(List<IEvaluable> code, Scope scope = null)
+    {
+        return (T)EvaluateCode(code, scope ?? Locator.Current.GetService<Evaluator>().RootScope);
     }
 
     private void AddNpcs(Room target, RoomModel model)
@@ -214,20 +259,37 @@ public class GameAssetLoader
         foreach (var charModel in customSections.CharactersSection.Elements)
         {
             var commands = GetCommands(charModel);
+            var items = GetItems(charModel).ToArray();
+
             Character character;
             if (charModel.IsNPC)
             {
-                character = new NonPlayableCharacter(charModel.Name, charModel.Description, commands: commands);
+                var c = new Conversation(
+                    [.. items.Select(item => new Paragraph(item.Identifier.Name, game => game.Player.AddItem(item)))]
+                );
+                character = new NonPlayableCharacter(charModel.Name, charModel.Description, commands: commands, conversation: c);
+
                 _npcs.Add((NonPlayableCharacter)character);
             }
             else
             {
-                character = new PlayableCharacter(charModel.Name, charModel.Description, commands: CreatePersistentCommands().Concat(commands).ToArray());
+                character = new PlayableCharacter(charModel.Name, charModel.Description, commands: commands);
                 _players.Add((PlayableCharacter)character);
             }
 
             ApplyAttributes(character, charModel);
-            AddItems(character, charModel);
+            foreach (var item in items)
+            {
+                character.AddItem(item);
+            }
+        }
+    }
+
+    private void AddItems(IItemContainer target, IItemModel model)
+    {
+        foreach (var item in GetItems(model))
+        {
+            target.AddItem(item);
         }
     }
 
@@ -244,29 +306,29 @@ public class GameAssetLoader
         var cmds = new List<CustomCommand>();
         foreach (var @ref in model.Commands)
         {
-            if (CommandStore.TryGet(@ref.Name, out var cmd))
+            if (CommandStore.TryGet(@ref, out var cmd))
             {
                 cmds.Add(cmd);
             }
             else
             {
-                throw new KeyNotFoundException($"Command '{@ref.Name}' not found.");
+                throw new KeyNotFoundException($"Command '{@ref}' not found.");
             }
         }
 
         return [.. cmds];
     }
 
-    private void AddItems(IItemContainer target, IItemModel model)
+    private IEnumerable<Item> GetItems(IItemModel model)
     {
         foreach (var itemRef in model.Items)
         {
             var item = GetByRef(itemRef, _items);
-            target.AddItem(item);
+            yield return item;
         }
     }
 
-    Attribute GetAttributeByRef(NamedRef @ref)
+    Attribute GetAttributeByRef(ModelRef @ref)
     {
         foreach (var attribute in _attributes)
         {
@@ -279,7 +341,7 @@ public class GameAssetLoader
         throw new KeyNotFoundException($"Attribute '{@ref}' not found.");
     }
 
-    T GetByRef<T>(NamedRef @ref, IList<T> collection)
+    T GetByRef<T>(ModelRef @ref, IList<T> collection)
         where T : IExaminable
     {
         foreach (var element in collection)

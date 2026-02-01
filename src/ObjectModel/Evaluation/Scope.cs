@@ -18,9 +18,9 @@ public class Scope
     public IEvaluable GetValue(string name)
     {
         var scope = this;
-        while (scope.Parent != null)
+        while (scope != null)
         {
-            if (_variables.TryGetValue(name, out var value))
+            if (scope._variables.TryGetValue(name, out var value))
             {
                 return value;
             }
@@ -34,5 +34,10 @@ public class Scope
     public void AddOrSet(string name, IEvaluable value)
     {
         _variables[name] = value;
+    }
+
+    public void AddFunction(IFunction function)
+    {
+        _variables[function.Name] = function;
     }
 }

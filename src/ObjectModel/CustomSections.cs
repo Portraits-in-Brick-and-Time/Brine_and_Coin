@@ -1,3 +1,4 @@
+using System.Linq;
 using LibObjectFile.Elf;
 using ObjectModel.Sections;
 
@@ -16,7 +17,9 @@ internal class CustomSections
 
     public MetaSection MetaSection { get; }
 
-    private CustomSection[] _allSections;
+    public QuestsSection QuestsSection { get; }
+
+    private readonly CustomSection[] _allSections;
 
     public CustomSections(ElfFile file)
     {
@@ -25,6 +28,7 @@ internal class CustomSections
         CharactersSection = new(file);
         RoomsSection = new(file);
         RegionsSection = new(file);
+        QuestsSection = new(file);
 
         MetaSection = new(file);
 
@@ -35,23 +39,34 @@ internal class CustomSections
             ItemsSection,
             RoomsSection,
             CharactersSection,
-            RegionsSection
+            RegionsSection,
+            QuestsSection
         ];
     }
 
-    public void Write(ElfSymbolTable symbolTable)
+    public void Write()
     {
         foreach (var section in _allSections)
         {
-            section.Write(symbolTable, this);
+            section.Write(this);
         }
     }
-    
+
     public void Read()
     {
         foreach (var section in _allSections)
         {
             section.Read(this);
+        }
+    }
+
+    public void PopulateSymbolTable(ElfSymbolTable symbolTable)
+    {
+        foreach (var section in _allSections
+            .Where(s => s is ISymbolTablePopulatable)
+            .OfType<ISymbolTablePopulatable>())
+        {
+            section.PopulateSymbolTable(symbolTable);
         }
     }
 }
