@@ -1,4 +1,4 @@
-namespace BrineAndCoin.Questing;
+namespace BrineAndCoin.Core.Questing;
 
 public interface IQuestStep
 {

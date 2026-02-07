@@ -1,7 +1,7 @@
+using System;
 using BrineAndCoin.Core;
+using BrineAndCoin.Core.Functions;
 using BrineAndCoin.Core.Questing;
-using BrineAndCoin.Questing;
-using BrineAndCoin.Questing.Steps;
 using NetAF.Commands.Persistence;
 using NetAF.Interpretation;
 using NetAF.Logging.Events;
@@ -57,7 +57,10 @@ public class BrineAndCoinGame
         Locator.CurrentMutable.RegisterConstant(playbackDevice);
         Locator.CurrentMutable.RegisterConstant(writer);
 
-        Locator.CurrentMutable.RegisterConstant(new Evaluator());
+        var evaluator = new Evaluator();
+        evaluator.RootScope.AddFunction(new SetTimeFunction());
+
+        Locator.CurrentMutable.RegisterConstant(evaluator);
     }
 
     private static EndCheckResult IsGameComplete(Game game)

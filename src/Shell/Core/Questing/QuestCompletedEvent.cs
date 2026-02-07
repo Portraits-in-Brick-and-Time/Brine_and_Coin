@@ -1,6 +1,6 @@
 using NetAF.Logging.Events;
 
-namespace BrineAndCoin.Questing;
+namespace BrineAndCoin.Core.Questing;
 
 public record QuestCompletedEvent(string Name) : BaseEvent
 {

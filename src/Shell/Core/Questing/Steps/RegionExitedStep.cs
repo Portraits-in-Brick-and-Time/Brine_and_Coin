@@ -1,6 +1,6 @@
 using NetAF.Logging.Events;
 
-namespace BrineAndCoin.Questing.Steps;
+namespace BrineAndCoin.Core.Questing.Steps;
 
 public class RegionExitedStep(string regionName) : IQuestStep
 {

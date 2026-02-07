@@ -1,6 +1,7 @@
+using System;
 using BrineAndCoin.Core;
 
-namespace BrineAndCoin;
+namespace BrineAndCoin.Menu;
 
 public class LoadGamePage : MenuPage
 {
