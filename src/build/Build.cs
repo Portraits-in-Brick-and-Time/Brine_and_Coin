@@ -112,11 +112,10 @@ class BuildFile : NukeBuild, IHazGitVersion, IHazConfiguration
                 .SetConfiguration(((IHazConfiguration)this).Configuration)
                 .SetSelfContained(false)
                 .CombineWith(info, (settings, i) =>
-                {
-                    return settings
-                        .SetRuntime(i.rid)
-                        .SetOutput(i.publishDir);
-                }));
+                    settings
+                    .SetRuntime(i.rid)
+                    .SetOutput(i.publishDir))
+            );
         });
 
     readonly string Repository = GitHubActions.Instance?.Repository ?? "Portraits-in-Brick-and-Time/Brine-and-Coin";
