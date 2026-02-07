@@ -3,14 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using Nuke.Common;
 using Nuke.Common.CI.GitHubActions;
-using Nuke.Common.CI.GitHubActions.Configuration;
 using Nuke.Common.IO;
 using Nuke.Common.ProjectModel;
 using Nuke.Common.Tooling;
 using Nuke.Common.Tools.DotNet;
-using Nuke.Common.Tools.GitHub;
-using Nuke.Common.Tools.GitVersion;
-using Nuke.Common.Utilities;
 using Nuke.Components;
 using ObjectModel.IO;
 using Serilog;
@@ -19,12 +15,12 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
 [GitHubActions(
     "deploy",
     GitHubActionsImage.WindowsLatest,
-    OnPushBranches = new[] { "release" },
+    OnPushBranches = ["release"],
     AutoGenerate = false,
     FetchDepth = 0,
-    PublishArtifacts = true,
+    PublishArtifacts = false,
     EnableGitHubToken = true,
-    InvokedTargets = new[] { nameof(Deploy) })]
+    InvokedTargets = [nameof(Deploy)])]
 class BuildFile : NukeBuild, IHazGitVersion, IHazConfiguration
 {
     public static int Main() => Execute<BuildFile>(x => x.Build);
@@ -123,7 +119,7 @@ class BuildFile : NukeBuild, IHazGitVersion, IHazConfiguration
                 }));
         });
 
-    string repository = GitHubActions.Instance?.Repository ?? "Portraits-in-Brick-and-Time/Brine-and-Coin";
+    readonly string Repository = GitHubActions.Instance?.Repository ?? "Portraits-in-Brick-and-Time/Brine-and-Coin";
 
     Target DownloadOldRelease => _ => _
         .DependsOn(Publish)
@@ -133,14 +129,13 @@ class BuildFile : NukeBuild, IHazGitVersion, IHazConfiguration
             var channels = new List<string> { "win", "linux" };
             foreach (var channel in channels)
             {
-                Velopack($"[{channel}] download github --repoUrl https://github.com/{repository} --token {GitHubToken} -o {ReleaseDir}");
+                Velopack($"[{channel}] download github --repoUrl https://github.com/{Repository} --token {GitHubToken} -o {ReleaseDir}");
             }
         });
 
     Target VelopackPack => _ => _
         .DependsOn(DownloadOldRelease)
         .OnlyWhenStatic(() => IsServerBuild)
-        .Produces($"{PublishWinDir / ExeName}.exe", $"{PublishLinuxDir / ExeName}.appimage")
         .Executes(() =>
         {
             List<(string channel, string publishDir, string exeName)> info = [
@@ -173,7 +168,7 @@ class BuildFile : NukeBuild, IHazGitVersion, IHazConfiguration
             var channels = new List<string> { "win", "linux" };
             foreach (var channel in channels)
             {
-                Velopack($"upload github --channel {channel} --repoUrl https://github.com/{repository} --token {GitHubToken} --releaseName \"{version}\" --tag v{version} --merge");
+                Velopack($"upload github --channel {channel} --repoUrl https://github.com/{Repository} --token {GitHubToken} --releaseName \"{version}\" --tag v{version} --merge");
             }
         });
 }
