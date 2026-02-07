@@ -1,8 +1,9 @@
+using System;
 using BrineAndCoin.Core;
 using Spectre.Console;
 using Splat;
 
-namespace BrineAndCoin;
+namespace BrineAndCoin.Menu;
 
 public class MainMenuPage : MenuPage
 {

@@ -1,8 +1,8 @@
-using BrineAndCoin.Core;
+using System.Collections.Generic;
 using ObjectModel.Evaluation;
 using Splat;
 
-namespace BrineAndCoin.Shell.Core.Functions;
+namespace BrineAndCoin.Core.Functions;
 
 public class SetTimeFunction : Function<string, object>
 {

@@ -1,4 +1,8 @@
+using System;
+using System.IO;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using SoundFlow.Abstracts;
 using SoundFlow.Abstracts.Devices;
 using SoundFlow.Components;
@@ -81,7 +85,27 @@ public class TypeWriter
             audio.Dispose();
         };
 
-        Task inputMonitor = Task.Run(() =>
+        var inputMonitor = CreateInputMonitor(cancellationToken, cts, player);
+
+        try
+        {
+            await WriteAsync(await File.ReadAllTextAsync(textFilename, cancellationToken), cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            // Handle cancellation (e.g., log or clean up if necessary)
+        }
+        finally
+        {
+            await cts.CancelAsync(); // Ensure the input monitor task is canceled
+            await inputMonitor; // Wait for the input monitor to finish
+        }
+    }
+
+    private static Task CreateInputMonitor(CancellationToken cancellationToken, CancellationTokenSource cts,
+        SoundPlayer player)
+    {
+        var inputMonitor = Task.Run(() =>
         {
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -97,18 +121,6 @@ public class TypeWriter
             }
         }, cancellationToken);
 
-        try
-        {
-            await WriteAsync(File.ReadAllText(textFilename), cancellationToken);
-        }
-        catch (OperationCanceledException)
-        {
-            // Handle cancellation (e.g., log or clean up if necessary)
-        }
-        finally
-        {
-            cts.Cancel(); // Ensure the input monitor task is canceled
-            await inputMonitor; // Wait for the input monitor to finish
-        }
+        return inputMonitor;
     }
 }

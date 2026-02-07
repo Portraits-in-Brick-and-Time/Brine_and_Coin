@@ -1,8 +1,7 @@
+using System;
 using BrineAndCoin.Core;
+using BrineAndCoin.Core.Functions;
 using BrineAndCoin.Core.Questing;
-using BrineAndCoin.Questing;
-using BrineAndCoin.Questing.Steps;
-using BrineAndCoin.Shell.Core.Functions;
 using NetAF.Commands.Persistence;
 using NetAF.Interpretation;
 using NetAF.Logging.Events;

@@ -1,3 +1,5 @@
+using System;
+using System.Globalization;
 using NetAF.Commands;
 using NetAF.Logging.Events;
 using NetAF.Logic;
@@ -20,18 +22,18 @@ public class Clock : IEvaluable
         var evaluator = Locator.Current.GetService<Evaluator>()!;
         evaluator.RootScope.AddOrSet("clock", this);
 
-        Locator.Current.GetService<Game>()!.VariableManager.Add("clock.time", startTime.ToString());
+        Locator.Current.GetService<Game>()!.VariableManager.Add("clock.time", startTime.ToString(CultureInfo.InvariantCulture));
 
-        EventBus.Subscribe<RegionEntered>(handler);
-        EventBus.Subscribe<RoomEntered>(handler);
+        EventBus.Subscribe<RegionEntered>(Handler);
+        EventBus.Subscribe<RoomEntered>(Handler);
     }
 
-    private void handler(RegionEntered entered)
+    private void Handler(RegionEntered entered)
     {
         Step();
     }
 
-    private void handler(RoomEntered entered)
+    private void Handler(RoomEntered entered)
     {
         Step();
     }
@@ -43,10 +45,9 @@ public class Clock : IEvaluable
 
     public CustomCommand CreateCommand()
     {
-        return new(new CommandHelp("Clock", "What time is it?"), true, false, (game, parameters) =>
-        {
-            return new Reaction(ReactionResult.Inform, "It is " + GameExecutor.ExecutingGame.VariableManager.Get("clock.time"));
-        });
+        return new CustomCommand(new CommandHelp("Clock", "What time is it?"), true,
+            false, (game, parameters) => new Reaction(ReactionResult.Inform,
+                "It is " + GameExecutor.ExecutingGame.VariableManager.Get("clock.time")));
     }
 
     public void Set(string time)

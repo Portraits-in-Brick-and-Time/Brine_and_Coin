@@ -1,6 +1,7 @@
+using System.Collections.Generic;
 using NetAF.Logging.Events;
 
-namespace BrineAndCoin.Questing;
+namespace BrineAndCoin.Core.Questing;
 
 public class Quest(string name, string description, IEnumerable<IQuestStep> steps)
 {

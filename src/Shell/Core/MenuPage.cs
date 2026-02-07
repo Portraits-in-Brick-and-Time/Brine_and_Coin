@@ -1,3 +1,5 @@
+using System;
+using BrineAndCoin.Menu;
 using NetAF.Logging.Events;
 using Spectre.Console;
 

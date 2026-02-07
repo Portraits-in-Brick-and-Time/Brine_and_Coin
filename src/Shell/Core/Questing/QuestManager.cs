@@ -1,4 +1,4 @@
-using BrineAndCoin.Questing;
+using System.Collections.Generic;
 using NetAF.Commands;
 using NetAF.Logging.Events;
 using NetAF.Logic;

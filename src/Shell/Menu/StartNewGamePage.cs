@@ -1,18 +1,7 @@
+using System;
 using BrineAndCoin.Core;
-using NetAF.Interpretation;
-using NetAF.Logic;
-using NetAF.Logic.Modes;
-using NetAF.Rendering.FrameBuilders;
-using NetAF.Targets.Console;
-using ObjectModel;
-using ObjectModel.Evaluation;
-using Shell.Core;
-using SoundFlow.Backends.MiniAudio;
-using SoundFlow.Editing.Mapping;
-using SoundFlow.Structs;
-using Splat;
 
-namespace BrineAndCoin;
+namespace BrineAndCoin.Menu;
 
 public class StartNewGamePage : MenuPage
 {
