@@ -36,8 +36,10 @@ public class Scope
         _variables[name] = value;
     }
 
-    public void AddFunction(IFunction function)
+    public void AddFunction<T>()
+        where T : IFunction, new()
     {
+        var function = new T();
         _variables[function.Name] = function;
     }
 }

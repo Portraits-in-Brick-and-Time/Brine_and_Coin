@@ -8,9 +8,9 @@ public class Evaluator
 
     public Evaluator()
     {
-        RootScope.AddFunction(new Functions.AddNoteFunction());
-        RootScope.AddFunction(new Functions.ReactionFunction());
-        RootScope.AddFunction(new Functions.InteractionFunction());
+        RootScope.AddFunction<Functions.AddNoteFunction>();
+        RootScope.AddFunction<Functions.ReactionFunction>();
+        RootScope.AddFunction<Functions.InteractionFunction>();
     }
 
     public T Evaluate<T>(List<IEvaluable> code, Scope scope)

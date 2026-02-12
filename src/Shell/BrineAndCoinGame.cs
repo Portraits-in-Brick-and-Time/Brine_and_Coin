@@ -58,7 +58,7 @@ public class BrineAndCoinGame
         Locator.CurrentMutable.RegisterConstant(writer);
 
         var evaluator = new Evaluator();
-        evaluator.RootScope.AddFunction(new SetTimeFunction());
+        evaluator.RootScope.AddFunction<SetTimeFunction>();
 
         Locator.CurrentMutable.RegisterConstant(evaluator);
     }
