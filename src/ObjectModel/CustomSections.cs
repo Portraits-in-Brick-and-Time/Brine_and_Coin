@@ -21,7 +21,7 @@ internal class CustomSections
 
     public QuestsSection QuestsSection { get; }
 
-    public FunctionsSection FunctionsSection { get; }
+    public FunctionsSection FunctionDefinitionsSection { get; }
 
     private readonly CustomSection[] _allSections;
 
@@ -35,12 +35,12 @@ internal class CustomSections
         QuestsSection = new(file);
 
         MetaSection = new(file);
-        FunctionsSection = new(file);
+        FunctionDefinitionsSection = new(file);
 
         _allSections =
         [
             MetaSection,
-            FunctionsSection,
+            FunctionDefinitionsSection,
             AttributesSection,
             ItemsSection,
             RoomsSection,

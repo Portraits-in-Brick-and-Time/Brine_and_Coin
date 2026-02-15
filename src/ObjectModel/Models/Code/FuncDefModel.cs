@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using MessagePack;
+using ObjectModel.Evaluation;
 
 namespace ObjectModel.Models.Code;
 
@@ -7,5 +8,8 @@ namespace ObjectModel.Models.Code;
 internal class FuncDefModel : GameObjectModel
 {
     [Key(4)]
-    public List<string> Parameters { get; set; } = [];
+    public string[] Parameters { get; set; } = [];
+
+    [Key(5)]
+    public List<IEvaluable> Action { get; set; } = [];
 }
