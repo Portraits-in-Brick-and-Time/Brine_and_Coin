@@ -13,6 +13,7 @@ public class LanguageParser : Parser
         lexer.IgnoreWhitespace();
         lexer.MatchNumber(allowHex: false, allowBin: false);
         lexer.MatchString("\"", "\"");
+        lexer.MatchBoolean();
 
         lexer.Ignore(new SingleLineCommentIgnoreMatcher("//"));
         lexer.Ignore(new MultiLineCommentIgnoreMatcher("/*", "*/"));
